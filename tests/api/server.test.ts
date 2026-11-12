@@ -150,6 +150,25 @@ describe("proposals API", () => {
     expect((big.json() as { error: { code: string } }).error.code).toBe("PAYLOAD_TOO_LARGE");
   });
 
+  it("refuses an absurdly nested body with 422, never a 500, and stays alive after it", async () => {
+    const { app } = await makeApp();
+    const { cookie } = await newSandbox(app);
+    let deep: unknown = [];
+    for (let i = 0; i < 3000; i++) deep = [deep];
+    const res = await app.inject(
+      withCookie(cookie, {
+        method: "POST",
+        url: "/api/proposals",
+        payload: JSON.stringify({ recipient: deep, amountCents: 100, currency: "USD", memo: "" }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(res.statusCode).toBe(422);
+    expect((res.json() as { error: { code: string } }).error.code).toBe("INVALID_INPUT");
+    const health = await app.inject({ method: "GET", url: "/healthz" });
+    expect(health.statusCode).toBe(200);
+  });
+
   it("replays an idempotent submit and refuses a reused key with 409", async () => {
     const { app } = await makeApp();
     const { cookie } = await newSandbox(app);

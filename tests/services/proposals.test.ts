@@ -8,6 +8,7 @@ import { updateCaps, setFrozen } from "../../src/services/config.js";
 import {
   AuditUnavailableError,
   IdempotencyKeyReusedError,
+  InvalidInputError,
 } from "../../src/shared/errors.js";
 import { makeTestDb } from "../helpers.js";
 
@@ -164,6 +165,16 @@ describe("submitProposal: invalid proposals", () => {
     const res = submitProposal(db, clock, sandbox.id, "not an object", "agent:scripted");
     expect(res.reason).toBe("INVALID_PROPOSAL");
     expect(createRepositories(db).proposals.countBySandbox(sandbox.id)).toBe(1);
+  });
+
+  it("refuses an absurdly nested body with InvalidInputError, never a stack overflow", () => {
+    const { db, clock, sandbox } = makeTestDb();
+    let deep: unknown = [];
+    for (let i = 0; i < 3000; i++) deep = [deep];
+    expect(() =>
+      submitProposal(db, clock, sandbox.id, { recipient: deep, amountCents: 100, currency: "USD", memo: "" }, "agent:scripted"),
+    ).toThrow(InvalidInputError);
+    expect(createRepositories(db).proposals.countBySandbox(sandbox.id)).toBe(0);
   });
 });
 

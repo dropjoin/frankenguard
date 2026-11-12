@@ -12,6 +12,7 @@ import type { Clock } from "../shared/clock.js";
 import {
   AuditUnavailableError,
   IdempotencyKeyReusedError,
+  InvalidInputError,
   SandboxLimitReachedError,
 } from "../shared/errors.js";
 import { newUlid } from "../shared/ids.js";
@@ -65,14 +66,20 @@ function sha256Hex(text: string): string {
  * Deliberately NOT canonicalJson: a replay comparison must survive
  * floats and odd values in a malformed body (they stringify
  * deterministically), while the audit chain rightly rejects them.
+ * Nesting is capped at 100 levels: the recursion would otherwise
+ * stack-overflow on a hostile body and 500 the request instead of
+ * answering 422. Real proposal bodies are flat objects.
  */
-function stableStringify(value: unknown): string {
+const MAX_BODY_DEPTH = 100;
+
+function stableStringify(value: unknown, depth = 0): string {
+  if (depth > MAX_BODY_DEPTH) throw new InvalidInputError("request body is nested too deeply");
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
-  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item, depth + 1)).join(",")}]`;
   const record = value as Record<string, unknown>;
   const parts = Object.keys(record)
     .sort()
-    .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`);
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key], depth + 1)}`);
   return `{${parts.join(",")}}`;
 }
 
