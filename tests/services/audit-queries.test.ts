@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { withPurgeMode } from "../../src/db/migrate.js";
 import { getProposalBundle, listAudit } from "../../src/services/audit/queries.js";
 import { submitProposal } from "../../src/services/proposals.js";
 import { createSandbox } from "../../src/services/sandbox.js";
@@ -74,6 +75,25 @@ describe("listAudit", () => {
     const rows = listAudit(db, sandbox.id, { recipient: "acme-corp", outcome: "REJECTED" });
     expect(rows.entries).toHaveLength(2); // over-cap decision + invalid received
   });
+
+  it("survives one unparseable payload: the entry is marked, the rest of the view is intact", () => {
+    const { db, clock, sandbox } = makeTestDb();
+    seed(db, clock, sandbox.id);
+    const before = listAudit(db, sandbox.id, { limit: 100 });
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND seq = ?").run(
+        "{not json}",
+        sandbox.id,
+        before.entries[1]!.seq,
+      );
+    });
+    const after = listAudit(db, sandbox.id, { limit: 100 });
+    expect(after.entries).toHaveLength(before.entries.length);
+    const corrupt = after.entries.find((e) => e.seq === before.entries[1]!.seq)!;
+    expect(corrupt.payloadParseError).toBe(true);
+    expect(corrupt.payload).toEqual({});
+    expect(after.entries.filter((e) => !e.payloadParseError)).toHaveLength(before.entries.length - 1);
+  });
 });
 
 describe("getProposalBundle", () => {
@@ -106,5 +126,22 @@ describe("getProposalBundle", () => {
     expect(() => getProposalBundle(db, sandbox.id, "nope")).toThrow(NotFoundError);
     const other = createSandbox(db, clock);
     expect(() => getProposalBundle(db, other.id, approved.proposalId)).toThrow(NotFoundError);
+  });
+
+  it("marks a linked entry whose payload cannot be parsed instead of failing the bundle", () => {
+    const { db, clock, sandbox } = makeTestDb();
+    const { approved } = seed(db, clock, sandbox.id);
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND proposal_id = ? AND type = 'DECISION_MADE'").run(
+        "{not json}",
+        sandbox.id,
+        approved.proposalId,
+      );
+    });
+    const bundle = getProposalBundle(db, sandbox.id, approved.proposalId);
+    expect(bundle.decision?.outcome).toBe("APPROVED");
+    const decision = bundle.auditEntries.find((e) => e.type === "DECISION_MADE")!;
+    expect(decision.payloadParseError).toBe(true);
+    expect(decision.payload).toEqual({});
   });
 });

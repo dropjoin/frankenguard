@@ -321,6 +321,31 @@ describe("audit API", () => {
     expect(verify.json()).toMatchObject({ ok: false, reason: "payload is not canonical JSON data" });
   });
 
+  it("lists the audit view with a 200, marking the entry, when one payload cannot be parsed", async () => {
+    const { app, db } = await makeApp();
+    const { cookie, sandboxId } = await newSandbox(app);
+    await app.inject(
+      withCookie(cookie, {
+        method: "POST",
+        url: "/api/proposals",
+        payload: { recipient: "acme-corp", amountCents: 10_000, currency: "USD", memo: "" },
+      }),
+    );
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND type = 'PROPOSAL_RECEIVED'").run(
+        "{not json}",
+        sandboxId,
+      );
+    });
+    const list = await app.inject(withCookie(cookie, { method: "GET", url: "/api/audit?limit=200" }));
+    expect(list.statusCode).toBe(200);
+    const entries = (list.json() as { entries: { payloadParseError?: boolean; payload: unknown }[] }).entries;
+    expect(entries).toHaveLength(4);
+    const corrupt = entries.find((e) => e.payloadParseError === true);
+    expect(corrupt).toBeDefined();
+    expect(corrupt!.payload).toEqual({});
+  });
+
   it("verify is read-only: it writes no audit entry", async () => {
     const { app } = await makeApp();
     const { cookie } = await newSandbox(app);

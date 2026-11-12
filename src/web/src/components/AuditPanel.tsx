@@ -33,6 +33,9 @@ const REASON_CODES = [
 const PAGE_SIZE = 50;
 
 function chipFor(entry: AuditEntryView): { label: string; className: string } {
+  if (entry.payloadParseError) {
+    return { label: "Unparseable", className: "audit-chip audit-chip-received" };
+  }
   switch (entry.type) {
     case "PROPOSAL_RECEIVED":
       return { label: "Received", className: "audit-chip audit-chip-received" };
@@ -296,11 +299,17 @@ export function AuditPanel({
                     {expandedSeq === entry.seq ? "Hide payload" : "Show payload"}
                   </button>
                 </div>
-                {expandedSeq === entry.seq && (
-                  <pre className="font-mono terminal-block">
-                    {JSON.stringify(entry.payload, null, 2)}
-                  </pre>
-                )}
+                {expandedSeq === entry.seq &&
+                  (entry.payloadParseError ? (
+                    <p className="font-mono terminal-block">
+                      This entry&apos;s stored payload is not valid JSON, so its contents
+                      can&apos;t be shown.
+                    </p>
+                  ) : (
+                    <pre className="font-mono terminal-block">
+                      {JSON.stringify(entry.payload, null, 2)}
+                    </pre>
+                  ))}
                 {(index + 1) % 5 === 0 && (
                   <span className="audit-ghost">
                     <GhostMascot className="ghost-sm" state="idle" />

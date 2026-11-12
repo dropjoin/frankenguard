@@ -38,15 +38,28 @@ interface AuditRow {
 }
 
 function toView(row: AuditRow): AuditEntryView {
+  // A stored payload that is not valid JSON can only come from a
+  // corrupted database: appendAudit canonicalizes at write time.
+  // The entry is still listed, marked, with an empty payload, so
+  // one bad row cannot 500 the whole audit view or bundle.
+  let payload: Record<string, JsonValue>;
+  let payloadParseError: boolean | undefined;
+  try {
+    payload = JSON.parse(row.payload) as Record<string, JsonValue>;
+  } catch {
+    payload = {};
+    payloadParseError = true;
+  }
   return {
     seq: row.seq,
     type: row.type,
     ts: row.ts,
     actor: row.actor as AuditEntryView["actor"],
     proposalId: row.proposal_id,
-    payload: JSON.parse(row.payload) as Record<string, JsonValue>,
+    payload,
     prevHash: row.prev_hash,
     hash: row.hash,
+    ...(payloadParseError ? { payloadParseError } : {}),
   };
 }
 

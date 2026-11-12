@@ -69,6 +69,19 @@ describe("timeline", () => {
     expect(container.querySelector("script")).toBeNull();
   });
 
+  it("marks an entry whose payload could not be parsed, and says so instead of showing an empty payload", async () => {
+    const corrupt = auditEntry(1, { payload: {}, payloadParseError: true });
+    renderAudit(
+      baseState(),
+      makeMockClient({ listAudit: async () => ({ entries: [corrupt], nextAfterSeq: null }) }),
+    );
+    expect(await screen.findByText("Unparseable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show payload" }));
+    expect(
+      await screen.findByText("This entry's stored payload is not valid JSON, so its contents can't be shown."),
+    ).toBeInTheDocument();
+  });
+
   it("loads older entries through the cursor", async () => {
     const client = makeMockClient({
       listAudit: async (query) =>

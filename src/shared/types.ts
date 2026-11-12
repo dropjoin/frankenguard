@@ -216,6 +216,13 @@ export interface AuditEntryView {
   payload: Record<string, JsonValue>;
   prevHash: string;
   hash: string;
+  /**
+   * Set when the stored payload bytes are not valid JSON (only a
+   * corrupted database can hold one). The entry is still listed,
+   * with an empty payload, so one bad row cannot take down the
+   * whole audit view; the UI says the contents can't be shown.
+   */
+  payloadParseError?: boolean;
 }
 
 export interface StateResponse {
