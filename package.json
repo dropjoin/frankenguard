@@ -1,1 +1,59 @@
-{"dependencies":{"@fastify/cookie":"^10.0.0","@fastify/static":"^8.0.0","better-sqlite3":"^12.0.0","fastify":"^5.0.0","zod":"^3.24.0"},"description":"An AI agent proposes payments; a deterministic rule engine cross-examines every one. Kiroween 2026, Frankenstein.","devDependencies":{"@axe-core/playwright":"^4.10.0","@eslint/js":"^9.0.0","@fontsource-variable/geist-mono":"^5.0.0","@fontsource-variable/inter":"^5.0.0","@fontsource-variable/space-grotesk":"^5.0.0","@playwright/test":"1.50.1","@testing-library/jest-dom":"^6.0.0","@testing-library/react":"^16.0.0","@types/better-sqlite3":"^7.6.0","@types/node":"^22.0.0","@types/react":"^18.0.0","@types/react-dom":"^18.0.0","@vitejs/plugin-react":"^4.0.0","concurrently":"^9.0.0","eslint":"^9.0.0","globals":"^15.0.0","jsdom":"^26.0.0","playwright":"1.50.1","prettier":"^3.0.0","react":"^18.3.0","react-dom":"^18.3.0","tsx":"^4.0.0","typescript":"^5.7.0","typescript-eslint":"^8.0.0","vite":"^6.0.0","vitest":"^3.0.0"},"engines":{"node":">=20"},"name":"frankenguard","private":true,"scripts":{"build":"npm run build:server && npm run build:web","build:server":"tsc -p tsconfig.json && cp src/db/schema.sql dist/server/db/schema.sql","build:web":"vite build --config src/web/vite.config.ts","dev":"concurrently \"npm run dev:api\" \"npm run dev:web\"","dev:api":"tsx watch src/api/main.ts","dev:web":"vite --config src/web/vite.config.ts","lint":"eslint .","start":"node dist/server/api/main.js","test":"vitest run","test:e2e":"playwright test","typecheck":"tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p src/web/tsconfig.json"},"type":"module","version":"1.0.0"}
+{
+  "dependencies": {
+    "@fastify/cookie": "^10.0.0",
+    "@fastify/static": "^8.0.0",
+    "better-sqlite3": "^12.0.0",
+    "fastify": "^5.0.0",
+    "zod": "^3.24.0"
+  },
+  "description": "An AI agent proposes payments; a deterministic rule engine cross-examines every one. Kiroween 2026, Frankenstein.",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@eslint/js": "^9.0.0",
+    "@fontsource-variable/geist-mono": "^5.0.0",
+    "@fontsource-variable/inter": "^5.0.0",
+    "@fontsource-variable/space-grotesk": "^5.0.0",
+    "@playwright/test": "1.50.1",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "jsdom": "^26.0.0",
+    "playwright": "1.50.1",
+    "prettier": "^3.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "name": "frankenguard",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:server && npm run build:web",
+    "build:server": "tsc -p tsconfig.json && cp src/db/schema.sql dist/server/db/schema.sql && mkdir -p dist/server/db/migrations && cp src/db/migrations/*.sql dist/server/db/migrations/",
+    "build:web": "vite build --config src/web/vite.config.ts",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "tsx watch src/api/main.ts",
+    "dev:web": "vite --config src/web/vite.config.ts",
+    "lint": "eslint .",
+    "start": "node dist/server/api/main.js",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p src/web/tsconfig.json",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

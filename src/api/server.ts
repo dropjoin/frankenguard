@@ -1,4 +1,5 @@
 import cookie from "@fastify/cookie";
+import staticPlugin from "@fastify/static";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 
 import type Database from "better-sqlite3";
@@ -9,6 +10,7 @@ import { createRepositories } from "../db/repositories.js";
 import { utcDayWindow } from "../engine/window.js";
 import { verifyChain } from "../services/audit/chain.js";
 import { getProposalBundle, listAudit } from "../services/audit/queries.js";
+import { tamperAuditEntry } from "../services/audit/tamper.js";
 import { addRecipient, getCaps, removeRecipient, setFrozen, updateCaps } from "../services/config.js";
 import { submitProposal, toProposalResponse } from "../services/proposals.js";
 import {
@@ -20,6 +22,8 @@ import {
 import type { Clock } from "../shared/clock.js";
 import {
   DomainError,
+  InvalidInputError,
+  NotFoundError,
   RateLimitedError,
   SandboxExpiredError,
 } from "../shared/errors.js";
@@ -52,6 +56,10 @@ export interface AppOptions {
   /** Secure flag on the sandbox cookie. On in production, off for local HTTP. */
   cookieSecure?: boolean;
   limiters?: Limiters;
+  /** Directory holding the built SPA. When set, the server serves it and falls back to index.html for non-API paths. */
+  webRoot?: string;
+  /** Register the demo-only tamper route. Off unless explicitly enabled. */
+  tamperDemo?: boolean;
 }
 
 function cookieOptions(secure: boolean) {
@@ -70,6 +78,10 @@ export function buildApp(options: AppOptions): FastifyInstance {
   const app = Fastify({ bodyLimit: BODY_LIMIT_BYTES, trustProxy: options.trustProxy ?? false });
 
   void app.register(cookie);
+
+  if (options.webRoot) {
+    void app.register(staticPlugin, { root: options.webRoot, prefix: "/" });
+  }
 
   app.addHook("onRequest", async (request, reply) => {
     reply.header("content-security-policy", "default-src 'self'");
@@ -125,7 +137,17 @@ export function buildApp(options: AppOptions): FastifyInstance {
     return reply.status(500).send(toErrorEnvelope("INTERNAL_ERROR", "internal error"));
   });
 
-  app.setNotFoundHandler((_request, reply) => {
+  app.setNotFoundHandler((request, reply) => {
+    // The SPA fallback serves index.html for page navigations only.
+    // API paths always get the JSON envelope, and non-read methods
+    // never get a page, so the fallback can never shadow the API.
+    if (
+      options.webRoot &&
+      (request.method === "GET" || request.method === "HEAD") &&
+      !request.url.startsWith("/api/")
+    ) {
+      return reply.sendFile("index.html");
+    }
     return reply.status(404).send(toErrorEnvelope("NOT_FOUND", "route was not found"));
   });
 
@@ -257,6 +279,24 @@ export function buildApp(options: AppOptions): FastifyInstance {
     });
     return reply.send(result);
   });
+
+  // Demo-only, flag-gated: with TAMPER_DEMO off this route does not
+  // exist at all. It edits one audit row's payload through the
+  // privileged purge bypass, so the next verification reports the
+  // chain broken at that seq. Scoped to the caller's sandbox.
+  if (options.tamperDemo) {
+    app.post("/api/_demo/tamper", { preHandler: requireSandbox }, async (request, reply) => {
+      checkWrite(request);
+      const body = requireObjectBody(request.body);
+      const seq = (body as { seq?: unknown }).seq;
+      if (typeof seq !== "number" || !Number.isInteger(seq) || seq < 1) {
+        throw new InvalidInputError("seq must be a positive integer");
+      }
+      const tampered = tamperAuditEntry(db, request.sandboxId, seq);
+      if (!tampered) throw new NotFoundError("audit entry");
+      return reply.send({ seq, tampered: true });
+    });
+  }
 
   return app;
 }

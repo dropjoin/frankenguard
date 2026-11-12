@@ -100,8 +100,13 @@ CREATE TABLE IF NOT EXISTS purge_mode (
 
 INSERT OR IGNORE INTO purge_mode (id, active) VALUES (1, 0);
 
+-- Updates are forbidden outside the privileged purge bypass, the
+-- same exemption the delete trigger carries. The bypass is only on
+-- inside withPurgeMode, used by the sandbox reset and the
+-- flag-gated tamper demo; every normal path still hits the wall.
 CREATE TRIGGER IF NOT EXISTS audit_no_update
 BEFORE UPDATE ON audit_log
+WHEN (SELECT active FROM purge_mode WHERE id = 1) IS NOT 1
 BEGIN
   SELECT RAISE(ABORT, 'audit_log is append-only: updates are forbidden');
 END;

@@ -9,10 +9,14 @@ import Database from "better-sqlite3";
 // the compiled output so this loader works identically in dev, tests,
 // and the built server.
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 function loadSchemaSql(): string {
   return readFileSync(new URL("./schema.sql", import.meta.url), "utf8");
+}
+
+function loadMigrationSql(version: number): string {
+  return readFileSync(new URL(`./migrations/${String(version).padStart(3, "0")}.sql`, import.meta.url), "utf8");
 }
 
 export function migrate(db: Database.Database): void {
@@ -24,14 +28,21 @@ export function migrate(db: Database.Database): void {
   `);
   const row = db.prepare("SELECT MAX(version) AS v FROM schema_version").get() as { v: number | null };
   const current = row.v ?? 0;
-  if (current >= SCHEMA_VERSION) return;
-  withImmediateTransaction(db, () => {
-    db.exec(loadSchemaSql());
-    db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (?, ?)").run(
-      SCHEMA_VERSION,
-      new Date().toISOString(),
-    );
-  });
+  // Apply pending versions in order, one row per version. A fresh
+  // database gets the full schema (v1) plus every later migration;
+  // an existing database gets only what it lacks. CREATE ... IF NOT
+  // EXISTS never replaces an object that already exists, so a
+  // changed trigger or index always needs its own migration file.
+  for (let version = current + 1; version <= SCHEMA_VERSION; version++) {
+    const sql = version === 1 ? loadSchemaSql() : loadMigrationSql(version);
+    withImmediateTransaction(db, () => {
+      db.exec(sql);
+      db.prepare("INSERT INTO schema_version (version, applied_at) VALUES (?, ?)").run(
+        version,
+        new Date().toISOString(),
+      );
+    });
+  }
 }
 
 export function openDb(path: string): Database.Database {
@@ -48,7 +59,7 @@ export function openDb(path: string): Database.Database {
   return db;
 }
 
-/** Run `fn` with the purge flag on, restoring it afterwards. Only the sandbox purge path may use this. */
+/** Run `fn` with the purge flag on, restoring it afterwards. Only the sandbox purge path and the flag-gated tamper demo may use this. */
 export function withPurgeMode<T>(db: Database.Database, fn: () => T): T {
   db.prepare("UPDATE purge_mode SET active = 1 WHERE id = 1").run();
   try {

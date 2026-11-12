@@ -1,5 +1,6 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { createLiveAgent } from "../agents/live.js";
 import { openDb } from "../db/migrate.js";
@@ -22,6 +23,8 @@ function readEnv(): {
   agentApiKey: string | undefined;
   agentModel: string;
   agentBaseUrl: string;
+  webRoot: string | undefined;
+  tamperDemo: boolean;
 } {
   const port = Number(process.env.PORT ?? "3000");
   if (!Number.isSafeInteger(port) || port < 1 || port > 65535) {
@@ -35,16 +38,30 @@ function readEnv(): {
   if (provider === "live" && !agentApiKey) {
     throw new Error("AGENT_PROVIDER=live requires AGENT_API_KEY");
   }
+  // The built SPA lives next to the built server (dist/web). A
+  // missing web root fails startup in production, where the demo
+  // must serve the page; in development the Vite dev server owns
+  // the SPA, so the API runs alone with a warning.
+  const production = process.env.NODE_ENV === "production";
+  const webRoot = process.env.WEB_ROOT ?? fileURLToPath(new URL("../../web", import.meta.url));
+  if (!existsSync(webRoot)) {
+    if (production) {
+      throw new Error(`web root not found at ${webRoot}; run npm run build first`);
+    }
+    console.warn(`web root not found at ${webRoot}; serving the API only`);
+  }
   return {
     port,
     host: process.env.HOST ?? "0.0.0.0",
     dbPath: process.env.DB_PATH ?? "./data/frankenguard.db",
     trustProxy: process.env.TRUST_PROXY === "true",
-    cookieSecure: process.env.NODE_ENV === "production",
+    cookieSecure: production,
     agentMode: provider,
     agentApiKey,
     agentModel: process.env.AGENT_MODEL ?? "gpt-4o-mini",
     agentBaseUrl: process.env.AGENT_BASE_URL ?? "https://api.openai.com/v1",
+    webRoot: existsSync(webRoot) ? webRoot : undefined,
+    tamperDemo: process.env.TAMPER_DEMO === "1",
   };
 }
 
@@ -80,6 +97,8 @@ async function main(): Promise<void> {
     liveAgent,
     trustProxy: env.trustProxy,
     cookieSecure: env.cookieSecure,
+    webRoot: env.webRoot,
+    tamperDemo: env.tamperDemo,
   });
   const stopSweeper = startSweeper(db, clock);
   const shutdown = async (signal: string) => {
