@@ -1,0 +1,111 @@
+/* Global styles: one light theme, no scheme queries, no dark variant.
+   Every color resolves to a token in tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: var(--text-base);
+}
+
+body {
+  margin: 0;
+  background: var(--base-gray);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  letter-spacing: var(--ls-body);
+  line-height: var(--lh-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--text-display-1);
+  letter-spacing: var(--ls-display-1);
+  line-height: var(--lh-display-1);
+}
+
+h2 {
+  font-size: var(--text-display-2);
+  letter-spacing: var(--ls-display-2);
+  line-height: var(--lh-display-2);
+}
+
+h3 {
+  font-size: var(--text-display-3);
+  letter-spacing: var(--ls-display-3);
+  line-height: var(--lh-display-3);
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* 44px minimum touch targets on every interactive control. */
+button,
+[role="button"],
+input,
+select {
+  min-height: 44px;
+}
+
+/* Focus indicator: 2px --text-body inner outline + 3px --electric
+   outer ring with a 1px gap. Visible on every surface, including
+   the hero gradient. */
+:focus-visible {
+  box-shadow: 0 0 0 6px var(--electric);
+  outline: 2px solid var(--text-body);
+  outline-offset: 1px;
+}
+
+/* Type utilities. --font-mono is for code, hashes, and terminal
+   output only; the theme tests enforce the allow-list. */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Reduced motion: everything still works, nothing moves. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Deterministic screenshot mode (?shot=1): same treatment as reduced
+   motion, plus reveals forced visible, so screenshots are stable. */
+.shot *,
+.shot *::before,
+.shot *::after {
+  animation: none !important;
+  transition: none !important;
+}

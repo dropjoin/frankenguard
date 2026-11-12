@@ -1,0 +1,105 @@
+/* Binding design tokens (design 8.4.1). This file is the contract:
+   every color, font, and type token in the app resolves to a custom
+   property defined here, and nowhere else may a raw color value
+   appear. Text colors are deliberately darker than their matching
+   fills; a bright color is never used directly as text. */
+
+:root {
+  /* 60% light base */
+  --base-gray: #f2f2f2;
+  --base-sky: #d7ebff;
+  --base-lavender: #e9e2ff;
+
+  /* 30% secondary: frames, headers, the monster */
+  --purple: #673ab7;
+  --amethyst: #9b59b6;
+  --blue: #3498db;
+
+  /* 10% accents: small, targeted, never layout */
+  --pumpkin: #ff5f1f;
+  --electric: #39ff14;
+  --highlight: #f1c40f;
+
+  /* Hero: violet to indigo, drifting toward the sky */
+  --hero-start: #8e2de2;
+  --hero-end: #4a00e0;
+  --hero-gradient: linear-gradient(120deg, var(--hero-start), var(--hero-end));
+
+  /* Semantic fills: pass/fail is a solid fill with text-on-fill, never colored text */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #0ea5e9;
+
+  /* Text: always on a light base; bright fills take --text-on-fill */
+  --text-body: #1f2937;
+  --text-brand: #673ab7;
+  --text-brand-alt: #7c3aed;
+  --text-success: #166534;
+  --text-error: #b91c1c;
+  --text-warning: #92400e;
+  --text-info: #0369a1;
+  --text-blue: #1d4ed8;
+
+  /* Supporting (non-text) */
+  --text-on-fill: #111111;
+  --on-color: #ffffff;
+  --stitch: #673ab7;
+
+  /* Typography: Space Grotesk display, Inter body, Geist Mono code-only.
+     The Variable names are the @fontsource-variable family names; the
+     Fallback faces below are size-adjusted system fonts so the layout
+     barely moves while the webfonts load. */
+  --font-display: "Space Grotesk Variable", "Space Grotesk Fallback", "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter Variable", "Inter Fallback", "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono Fallback", "Geist Mono", ui-monospace, "Courier New", monospace;
+
+  --text-base: 1rem;
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-body: 1.6;
+  --lh-headline: 1.1;
+  --lh-display-1: 1.05;
+  --lh-display-2: 1.15;
+  --lh-display-3: 1.25;
+
+  --ls-display-1: -0.04em;
+  --ls-display-2: -0.03em;
+  --ls-display-3: -0.02em;
+  --ls-body: 0;
+
+  /* Type scale. Display sizes step down responsively; body stays 16px. */
+  --text-display-1: clamp(2.5rem, 6vw, 4rem);
+  --text-display-2: clamp(1.75rem, 4vw, 2.5rem);
+  --text-display-3: clamp(1.25rem, 2.5vw, 1.5rem);
+  --text-small: 0.875rem;
+  --text-label: 0.75rem;
+}
+
+/* Size-adjusted fallbacks. size-adjust matches the fallback's x-height
+   to the webfont's, measured from the actual font files with fontTools:
+   Inter x-height 1118/2048, Space Grotesk 486/1000, Geist Mono 530/1000,
+   against Arial / Courier New at 1082/2048 (Liberation metric twins,
+   measured on this machine). No ascent/descent overrides: with the
+   1.6 body line-height, a size-only adjustment cannot clip. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 103.33%;
+}
+
+@font-face {
+  font-family: "Space Grotesk Fallback";
+  src: local("Arial");
+  size-adjust: 91.99%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  src: local("Courier New");
+  size-adjust: 100.32%;
+}

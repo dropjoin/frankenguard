@@ -1,0 +1,82 @@
+/* Header band, simulated-money banner placement, and footer. The
+   header band is the only hero-gradient surface on the page. */
+
+.header-band {
+  background: var(--hero-gradient);
+  color: var(--on-color);
+}
+
+.header-band-inner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 20px 24px;
+}
+
+.header-band-brand {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.header-band-ghost {
+  flex-shrink: 0;
+}
+
+.header-band-wordmark {
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-size: var(--text-display-2);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-display-1);
+  line-height: var(--lh-display-1);
+}
+
+.header-band-tagline {
+  color: var(--on-color);
+  font-size: var(--text-small);
+  font-weight: var(--fw-medium);
+  margin-top: 4px;
+}
+
+.header-band-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.agent-badge {
+  background: var(--highlight);
+  border: 2px solid var(--text-on-fill);
+  border-radius: 999px;
+  color: var(--text-on-fill);
+  font-family: var(--font-display);
+  font-size: var(--text-small);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+}
+
+.simulated-banner-wrap {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 16px 24px 0;
+}
+
+.page-footer {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 28px 24px 36px;
+  text-align: center;
+}
+
+.page-footer-text {
+  color: var(--text-body);
+  font-size: var(--text-small);
+  font-weight: var(--fw-medium);
+}

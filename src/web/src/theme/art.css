@@ -1,0 +1,64 @@
+/* Art kit sizing and ambient motion. Colors resolve to tokens; the
+   ghost floats slowly and freezes under reduced motion / ?shot=1. */
+
+.ghost-sm {
+  height: 40px;
+  width: 40px;
+}
+
+.ghost-md {
+  height: 72px;
+  width: 72px;
+}
+
+.ghost-lg {
+  height: 120px;
+  width: 120px;
+}
+
+.ghost-float {
+  animation: ghost-bob 5s ease-in-out infinite;
+}
+
+@keyframes ghost-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.monster-head {
+  height: auto;
+  max-width: 320px;
+  width: 100%;
+}
+
+.bolt-icon {
+  height: 20px;
+  width: 12px;
+}
+
+.suture-divider {
+  display: block;
+  height: 12px;
+  width: 100%;
+}
+
+.stitch-border {
+  border: 2px dashed var(--stitch);
+  border-radius: 18px;
+}
+
+.pumpkin-icon {
+  height: 26px;
+  width: 28px;
+}
+
+.snowflake-icon {
+  height: 24px;
+  width: 24px;
+}
