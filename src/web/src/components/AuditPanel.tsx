@@ -176,8 +176,9 @@ export function AuditPanel({
   return (
     <Panel title="Audit trail" variant="lavender">
       <p className="panel-intro">
-        Every step leaves a receipt, each one chained to the last by hash. Nothing here
-        can be edited or deleted through the API.
+        Every step leaves a receipt, each one chained to the last by hash. Individual
+        entries can&apos;t be edited or deleted; resetting the demo wipes the whole
+        sandbox and starts a fresh chain.
       </p>
 
       <form className="audit-filters" onSubmit={applyFilters}>

@@ -82,6 +82,16 @@ describe("timeline", () => {
     ).toBeInTheDocument();
   });
 
+  it("says individual entries can't be edited, and that resetting wipes the whole sandbox", async () => {
+    renderAudit();
+    await screen.findByText("Decision · Approved");
+    expect(
+      screen.getByText(
+        "Individual entries can't be edited or deleted; resetting the demo wipes the whole sandbox and starts a fresh chain.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("loads older entries through the cursor", async () => {
     const client = makeMockClient({
       listAudit: async (query) =>
