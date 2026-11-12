@@ -367,3 +367,40 @@ queries are plain SQL over the JSON payloads with cursor
 pagination. 200 randomized submits across 4 connections never push
 executed spend past the daily cap and leave the chain valid.
 150 tests green (110 before).
+- **D27 — over_daily sizing.** Conflict: design §5.2 says "2x $600"
+  but $600 exceeds the $500 per-tx cap, so those proposals would fail
+  PER_TX_CAP before the daily cap ever saw them. Choice: fills of
+  min(perTxCap, remaining headroom), at most 50, then one probe of
+  min(perTxCap, remaining + 1) — $1 when the cap is exactly filled.
+  Under default caps that is 2 fills + probe. With daily > 50x
+  per-tx no single probe can fail the daily cap; the probe still
+  goes out and the honest verdict is shown.
+- **D28 — live provider.** Gap: design §5.3 names no provider API.
+  Choice: an OpenAI-compatible chat-completions endpoint, with
+  AGENT_MODEL and AGENT_BASE_URL as optional overrides, one isolated
+  fetch function taking an injected fetch for tests.
+- **D37 — agent orchestration.** Gap: design §2.4 names only
+  types/scripted/live under agents/, but something must turn a run
+  into submitted proposals. Choice: `src/agents/run.ts` holds the
+  orchestration (scenario dispatch, live call, fallback, submit
+  loop).
+- **D38 — bare prompts.** Gap: no passage covers a prompt-only run
+  with the live agent off. Choice: refused with InvalidInputError
+  rather than silently reinterpreted; a live failure falls back to
+  the happy_path scenario and reports agentMode
+  "scripted_fallback".
+- **D39 — fixed scenario amounts.** Choice: the other five scenarios
+  use the design's fixed amounts verbatim; only over_daily adapts
+  to the current config. Under changed caps the same proposals get
+  different verdicts, which is what the demo is for.
+
+## Phase 4 — agents (13 Nov 2026)
+
+Six scripted scenarios, the env-gated live agent (one LLM call,
+Zod-validated, 10s timeout, never told caps or verdicts), and the
+run orchestration that submits everything through ProposalService
+with server-generated idempotency keys. A hostile agent returning
+extra fields (approved: true, a forged snapshot) cannot change a
+verdict: validation builds a fresh proposal from known fields
+only. 178 tests green (150 before). Live agent stays disabled by
+default; no keys anywhere in this repo.
