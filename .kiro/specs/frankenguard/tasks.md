@@ -13,9 +13,9 @@ checked as each piece lands with passing tests.
 - [x] 8. Invariant tests: P1-P5 over randomized inputs
 - [x] 9. MCP server (`tools/mcp-server/`): stdio JSON-RPC, three tools, smoke test
 - [x] 10. Kiro hooks + MCP config + custom agent definition in `.kiro/`
-- [ ] 11. UI (`app/`): hero, console, verdict trace, policy panel, ledger, anatomy, honesty block
-- [ ] 12. Build script: inline `src/` + `app.js` into `dist/index.html`, deterministic bytes
-- [ ] 13. Verify script: title check, secret scan, inlining check, honesty-label check
+- [x] 11. UI (`app/`): hero, console, verdict trace, policy panel, ledger, anatomy, honesty block
+- [x] 12. Build script: inline `src/` + `app.js` into `dist/index.html`, deterministic bytes
+- [x] 13. Verify script: title check, secret scan, inlining check, honesty-label check
 - [ ] 14. Deploy script: Cloudflare Worker + custom subdomain, live verification
 - [ ] 15. README, build journal, competitor scan, Devpost draft
 - [ ] 16. Final pass: full test suite green, live demo exercised end to end, no secrets committed
