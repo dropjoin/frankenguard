@@ -180,6 +180,22 @@ export const auditQuerySchema = z.object({
   recipient: z.string().max(64).optional(),
 });
 
+export type AuditQuery = {
+  afterSeq?: number;
+  limit?: number;
+  outcome?: "APPROVED" | "REJECTED";
+  code?: string;
+  recipient?: string;
+};
+
+/** The config row as the API sees it: caps, freeze state, and the version that last changed them. */
+export interface CapsConfig {
+  configVersion: number;
+  perTxCapCents: number;
+  dailyCapCents: number;
+  frozen: boolean;
+}
+
 // --- API response shapes ---------------------------------------------------
 
 export interface ProposalResponse {
@@ -227,4 +243,27 @@ export interface VerifyResponse {
   headHash: string | null;
   brokenAtSeq?: number;
   reason?: string;
+}
+
+/** GET /api/proposals/:id: the proposal, its decision, its payment, and every audit entry that names it. */
+export interface ProposalBundle {
+  proposal: {
+    id: string;
+    amountCents: number;
+    currency: string;
+    memo: string;
+    recipientKey: string;
+    label?: string;
+    status: ProposalStatus;
+    idempotencyKey?: string;
+    createdAt: string;
+  };
+  decision: Decision | null;
+  payment: {
+    id: string;
+    amountCents: number;
+    recipientKey: string;
+    executedAt: string;
+  } | null;
+  auditEntries: AuditEntryView[];
 }

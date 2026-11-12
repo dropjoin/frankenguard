@@ -64,6 +64,18 @@ export interface PaymentRow {
   executed_at: string;
 }
 
+export interface AuditLogRow {
+  seq: number;
+  sandbox_id: string;
+  type: string;
+  ts: string;
+  actor: string;
+  proposal_id: string | null;
+  payload: string;
+  prev_hash: string;
+  hash: string;
+}
+
 export function createRepositories(db: Database.Database) {
   return {
     sandboxes: {
@@ -116,6 +128,11 @@ export function createRepositories(db: Database.Database) {
         return db
           .prepare("SELECT * FROM allowlist WHERE sandbox_id = ? ORDER BY recipient_key ASC")
           .all(sandboxId) as AllowlistRow[];
+      },
+      getByKey(sandboxId: string, recipientKey: string): AllowlistRow | undefined {
+        return db
+          .prepare("SELECT * FROM allowlist WHERE sandbox_id = ? AND recipient_key = ?")
+          .get(sandboxId, recipientKey) as AllowlistRow | undefined;
       },
       insert(row: AllowlistRow): void {
         db.prepare(
@@ -238,6 +255,11 @@ export function createRepositories(db: Database.Database) {
           .prepare("SELECT COUNT(*) AS n FROM audit_log WHERE sandbox_id = ?")
           .get(sandboxId) as { n: number };
         return row.n;
+      },
+      listBySandbox(sandboxId: string): AuditLogRow[] {
+        return db
+          .prepare("SELECT * FROM audit_log WHERE sandbox_id = ? ORDER BY seq ASC")
+          .all(sandboxId) as AuditLogRow[];
       },
       headBySandbox(sandboxId: string): { entries: number; headHash: string | null } {
         const row = db
