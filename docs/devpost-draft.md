@@ -1,8 +1,8 @@
 # Devpost submission draft: FrankenGuard (DO NOT SUBMIT FROM THIS FILE)
 
 Category: Frankenstein. Solo entry. All fields in English.
-Demo URL and video link to be filled in at deploy/submit time;
-everything else below is final copy.
+Demo video link to be filled in at submit time; everything else
+below is final copy.
 
 ---
 
@@ -18,7 +18,7 @@ daily cap. Every verdict lands in a hash-chained audit log.
 
 ## Links
 
-- Live demo: [ADD DEPLOYED URL]
+- Live demo: https://frankenguard.onrender.com
 - GitHub repo: https://github.com/dropjoin/frankenguard
 - Demo video: [ADD PUBLIC YOUTUBE LINK, UNDER 3 MINUTES]
 
@@ -198,7 +198,7 @@ Vite, Vitest, Playwright, zod, axe-core.
 
 ## Try it out
 
-- Live demo: [ADD DEPLOYED URL]
+- Live demo: https://frankenguard.onrender.com
 - GitHub repo: https://github.com/dropjoin/frankenguard
 - No login needed. No wallet. Nothing to install.
 - Suggested first three actions: run Happy path, run Prompt
