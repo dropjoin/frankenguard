@@ -87,7 +87,7 @@ describe("timeline", () => {
     await screen.findByText("Decision · Approved");
     expect(
       screen.getByText(
-        "Individual entries can't be edited or deleted; resetting the demo wipes the whole sandbox and starts a fresh chain.",
+        /Individual entries can't be edited or deleted; resetting the demo wipes the whole sandbox and starts a fresh chain\./,
       ),
     ).toBeInTheDocument();
   });
