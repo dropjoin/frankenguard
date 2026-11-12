@@ -404,3 +404,42 @@ extra fields (approved: true, a forged snapshot) cannot change a
 verdict: validation builds a fresh proposal from known fields
 only. 178 tests green (150 before). Live agent stays disabled by
 default; no keys anywhere in this repo.
+- **D23 — cookie Secure flag.** Gap: design §6.5 says Secure "in
+  production" without a mechanism. Choice: Secure is on exactly
+  when NODE_ENV=production, off for local HTTP development.
+- **D24 — error envelope.** Gap: design §6.4 names codes and statuses
+  but not the JSON shape. Choice: `{error: {code, message}}` for
+  every error, including framework errors and the 404 handler;
+  RateLimitedError adds a Retry-After header.
+- **D29 — live rate bucket.** Gap: the 6/min live bucket would
+  throttle scenario clicking in live mode. Choice: it gates only
+  prompt runs while the live agent is enabled; scenario runs always
+  use the normal 30/min write bucket.
+- **D30 — entrypoint.** Gap: design §2.4 names the factory
+  (server.ts) but no entrypoint. Choice: `src/api/main.ts` reads
+  env, opens the DB, starts the sweeper, and listens. Live mode
+  without AGENT_API_KEY fails startup loudly.
+- **D31 — healthz.** Gap: no response shape given. Choice: JSON
+  `{status: "ok"}`, unthrottled, no cookie required.
+- **D40 — framework error mapping.** Gap: Fastify's own errors have
+  no design mapping. Choice: malformed JSON → 422 INVALID_INPUT
+  (Fastify 5 code FST_ERR_CTP_INVALID_JSON_BODY), oversize body →
+  413 PAYLOAD_TOO_LARGE, other 4xx → INVALID_INPUT with the
+  framework status, anything else → 500 INTERNAL_ERROR with no
+  internals leaked.
+- **D41 — sandbox responses.** Gap: no body shape given. Choice:
+  POST /api/sandbox returns `{sandboxId}` (201 new, 200 live
+  cookie); POST /api/sandbox/reset returns `{sandboxId}` with 200
+  and the new cookie.
+- **D42 — recent proposals.** Gap: StateResponse carries
+  recentProposals without a count. Choice: the 10 most recent.
+
+## Phase 5 — API (13 Nov 2026)
+
+Fastify factory with the cookie session middleware (touch on every
+request, 401 on missing/unknown/expired), all thirteen routes, the
+five token buckets, security headers, and the centralized error
+handler. No Fastify schema validation on bodies: malformed
+proposals must reach the service and be recorded. The built server
+was smoke-tested live (healthz 200, state 401, sandbox 201).
+213 tests green (178 before).
