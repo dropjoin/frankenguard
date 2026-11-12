@@ -85,7 +85,8 @@ cents, fail closed, no real money, honest demo data, and a light-only
 theme with contrast verified by computation.
 
 The stack is TypeScript strict throughout: Fastify and better-sqlite3
-on the server, zod schemas at every boundary, React 18 with Vite on
+on the server, zod schemas at the config, agent, and query boundaries,
+and hand-written shape validation for proposals, React 18 with Vite on
 the client, Vitest for unit and component tests, Playwright for
 end-to-end. The rule engine is a pure function with no clock, no I/O,
 no randomness, and a test that enforces that purity by inspecting its

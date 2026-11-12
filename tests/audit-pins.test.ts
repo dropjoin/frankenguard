@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // fails loudly here instead of silently at deploy time.
 
 function repoFile(name: string): string {
-  return readFileSync(new URL(`../../${name}`, import.meta.url), "utf8");
+  return readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
 }
 
 describe("audit pins", () => {
@@ -18,5 +18,13 @@ describe("audit pins", () => {
     expect(lines).toContain(".env");
     expect(lines).toContain(".env.*");
     expect(lines).toContain("!.env.example");
+  });
+
+  it("L5: the Devpost draft says where validation actually lives, without overclaiming", () => {
+    const draft = repoFile("docs/devpost-draft.md").replace(/\s+/g, " ");
+    expect(draft).not.toContain("zod schemas at every boundary");
+    expect(draft).toContain(
+      "zod schemas at the config, agent, and query boundaries, and hand-written shape validation for proposals",
+    );
   });
 });
