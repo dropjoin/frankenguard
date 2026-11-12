@@ -7,7 +7,7 @@ import { useId } from "react";
 export function MonsterHead({ className }: { className?: string }) {
   const clipId = useId().replace(/:/g, "");
   return (
-    <svg aria-hidden="true" className={className} role="presentation" viewBox="0 0 200 150">
+    <svg aria-hidden="true" className={className ?? "monster-head"} role="presentation" viewBox="0 0 200 150">
       <defs>
         <clipPath id={clipId}>
           <rect height="100" rx="18" width="120" x="40" y="20" />

@@ -24,10 +24,14 @@
   }
 }
 
-/* Frozen frame: a fixed --blue frame around the whole page, wiped
-   in over 500ms. The overlay never intercepts pointer input. */
+/* Frozen frame: a --blue frame around the whole page, wiped in
+   over 500ms. Absolutely positioned over the page wrapper (not
+   fixed to the viewport), so it frames the entire page including
+   in full-page captures. The overlay never intercepts pointer
+   input. */
 .page-frozen {
   min-height: 100vh;
+  position: relative;
 }
 
 .page-frozen::after {
@@ -36,7 +40,7 @@
   content: "";
   inset: 0;
   pointer-events: none;
-  position: fixed;
+  position: absolute;
   z-index: 50;
 }
 

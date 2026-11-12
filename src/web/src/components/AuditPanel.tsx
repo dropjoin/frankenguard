@@ -187,7 +187,7 @@ export function AuditPanel({
             }
             value={outcome}
           >
-            <option value="">All outcomes</option>
+            <option value="">All</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Rejected</option>
           </select>
@@ -202,7 +202,7 @@ export function AuditPanel({
             onChange={(event) => setCode(event.target.value)}
             value={code}
           >
-            <option value="">All codes</option>
+            <option value="">All</option>
             {REASON_CODES.map((reason) => (
               <option key={reason} value={reason}>
                 {reason}

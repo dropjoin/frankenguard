@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GhostState } from "./components/art/index.js";
 import { AgentPanel } from "./components/AgentPanel.js";
 import { AuditPanel } from "./components/AuditPanel.js";
-import { JackOLantern, Snowflake } from "./components/art/index.js";
+import { JackOLantern } from "./components/art/index.js";
 import { ControlsPanel } from "./components/ControlsPanel.js";
 import { DecisionPanel } from "./components/DecisionPanel.js";
 import { HeaderBand } from "./components/HeaderBand.js";
@@ -59,9 +59,7 @@ function Shell() {
       </div>
       {frozen && store.status === "ready" && (
         <div className="frozen-banner-wrap">
-          <Banner icon={<Snowflake className="snowflake-icon" />} variant="info">
-            All payments are blocked.
-          </Banner>
+          <Banner variant="info">All payments are blocked.</Banner>
           <p className="frozen-explainer">
             The freeze switch is on. Every proposal is rejected by the first rule until you switch it off in
             Controls.

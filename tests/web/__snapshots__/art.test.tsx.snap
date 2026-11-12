@@ -334,6 +334,7 @@ exports[`GhostMascot > matches snapshots for every state > verified 1`] = `
 exports[`art kit > matches a snapshot for the monster head 1`] = `
 <svg
   aria-hidden="true"
+  class="monster-head"
   role="presentation"
   viewBox="0 0 200 150"
 >

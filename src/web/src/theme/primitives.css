@@ -260,6 +260,7 @@
   height: 44px;
   justify-content: space-between;
   padding: 4px 8px;
+  position: relative;
   width: 96px;
 }
 
@@ -271,17 +272,24 @@
   background: var(--base-gray);
 }
 
+/* The thumb slides between the two end bolts: left when off, right
+   when on. Absolutely positioned so the travel is real, not a flex
+   order trick that leaves it in one place. */
 .toggle-thumb {
   background: var(--on-color);
   border: 2px solid var(--text-body);
   border-radius: 50%;
   height: 28px;
-  order: 2;
+  left: 6px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: left 0.2s ease;
   width: 28px;
 }
 
 .toggle-on .toggle-thumb {
-  order: 1;
+  left: calc(100% - 38px);
 }
 
 .toggle-bolt {
