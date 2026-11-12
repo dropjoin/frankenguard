@@ -481,6 +481,23 @@ default; no keys anywhere in this repo.
   server INVALID_PROPOSAL renders a generic check-the-fields
   notice plus the decision-level card. The server stays
   authoritative; the client checks are UX only.
+- **D51 — static serving.** Gap: the design specifies the API and
+  the client but not how the built client is served. Choice: the
+  server serves `dist/web` through @fastify/static when a web
+  root is configured, with an SPA fallback that answers GET/HEAD
+  requests for non-/api paths with index.html; /api paths and
+  non-read methods always get the JSON 404 envelope, so the
+  fallback can never shadow the API. `WEB_ROOT` overrides the
+  root (default: `dist/web` relative to the entrypoint); a
+  missing directory fails startup in production and warns +
+  serves API-only otherwise.
+- **D52 — tamper demo endpoint.** Gap: task 8.6 wants a broken
+  chain demonstrable, but no endpoint shape. Choice: POST
+  /api/_demo/tamper with `{seq}`, returning `{seq,
+  tampered: true}`, registered only when TAMPER_DEMO=1, scoped
+  to the caller's sandbox, reusing the purge_mode bypass so the
+  append-only triggers stay the enforcement mechanism everywhere
+  else. With the flag off the route does not exist.
 
 ## Phase 5 — API (13 Nov 2026)
 
