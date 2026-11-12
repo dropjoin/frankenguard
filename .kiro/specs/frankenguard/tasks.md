@@ -11,8 +11,8 @@ checked as each piece lands with passing tests.
 - [x] 6. Hash-chained ledger (`src/ledger.js`): append, verify, tamper detection, injected hash fn
 - [x] 7. Ledger tests: chain growth, verification, tamper fuzz
 - [x] 8. Invariant tests: P1-P5 over randomized inputs
-- [ ] 9. MCP server (`tools/mcp-server/`): stdio JSON-RPC, three tools, smoke test
-- [ ] 10. Kiro hooks + MCP config + custom agent definition in `.kiro/`
+- [x] 9. MCP server (`tools/mcp-server/`): stdio JSON-RPC, three tools, smoke test
+- [x] 10. Kiro hooks + MCP config + custom agent definition in `.kiro/`
 - [ ] 11. UI (`app/`): hero, console, verdict trace, policy panel, ledger, anatomy, honesty block
 - [ ] 12. Build script: inline `src/` + `app.js` into `dist/index.html`, deterministic bytes
 - [ ] 13. Verify script: title check, secret scan, inlining check, honesty-label check

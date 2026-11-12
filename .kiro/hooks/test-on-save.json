@@ -1,0 +1,17 @@
+{
+  "action": {
+    "command": "npm test",
+    "type": "command"
+  },
+  "description": "Run the full test suite whenever a source or test file is saved, so a broken gate is caught in the same minute it is written.",
+  "enabled": true,
+  "name": "test-on-save",
+  "trigger": {
+    "patterns": [
+      "src/**/*.js",
+      "tests/**/*.js",
+      "tools/**/*.js"
+    ],
+    "type": "fileSave"
+  }
+}

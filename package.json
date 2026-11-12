@@ -1,0 +1,16 @@
+{
+  "description": "An AI agent proposes payments; a deterministic rule engine cross-examines every one. Kiroween 2026, Frankenstein.",
+  "engines": {
+    "node": ">=20"
+  },
+  "name": "frankenguard",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "mcp": "node tools/mcp-server/index.js",
+    "test": "node --test tests/engine.test.js tests/parser.test.js tests/ledger.test.js tests/invariants.test.js tests/mcp.test.js",
+    "verify": "node scripts/verify.mjs"
+  },
+  "type": "commonjs",
+  "version": "1.0.0"
+}
