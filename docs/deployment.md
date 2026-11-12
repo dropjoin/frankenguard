@@ -4,6 +4,20 @@ One container, one process, one SQLite file. The server serves the
 API and the built React client from the same origin, so there is no
 separate frontend deployment to keep in sync.
 
+## Render (the public demo)
+
+`render.yaml` at the repo root is a Render Blueprint for a free web
+service: `npm ci && npm run build`, then `node
+dist/server/api/main.js`, health check on `/healthz`. Create it from
+the Render dashboard with New > Blueprint pointed at this repo. The
+blueprint sets `NODE_ENV=production` (Secure cookie flag) and
+`TRUST_PROXY=1` (Render terminates TLS and forwards plain HTTP, so
+rate limits need the real client IP). No secrets are required: the
+live agent stays off and `TAMPER_DEMO` is never set on the public
+deployment. The free plan has no persistent disk, so the SQLite
+file lives on the ephemeral filesystem and sandboxes disappear on
+redeploy or restart; that matches the demo's short-lived sandboxes.
+
 ## Docker
 
 ```sh

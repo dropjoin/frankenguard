@@ -1,0 +1,27 @@
+# FrankenGuard — Render Blueprint (free web service).
+#
+# How to use: in the Render dashboard choose "New > Blueprint" and
+# point it at this repository, or create the web service manually
+# with the same settings (see docs/deployment.md). Render injects
+# $PORT; the app binds 0.0.0.0:$PORT itself.
+#
+# No secrets needed: the live agent stays disabled (scripted mode),
+# and TAMPER_DEMO is deliberately NOT set on the public deployment.
+#
+# Data: SQLite lives in ./data/ on the ephemeral filesystem (no disk
+# on the free plan), so sandboxes disappear on redeploy or restart.
+# That fits the demo: sandboxes are short-lived anyway (60-minute
+# idle expiry, 4-hour absolute cap).
+services:
+  - type: web
+    name: frankenguard
+    env: node
+    plan: free
+    buildCommand: "npm ci && npm run build"
+    startCommand: "node dist/server/api/main.js"
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
