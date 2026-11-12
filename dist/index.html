@@ -1536,6 +1536,17 @@ footer a{color:var(--dim)}
     if (new URLSearchParams(location.search).has("shot")) {
       document.body.classList.add("shot");
     }
+    if (!window.crypto || !window.crypto.subtle) {
+      // Ledger hashing needs WebCrypto, which only exists in secure
+      // contexts (https or localhost). Fail visibly instead of dying
+      // silently on the first hash call.
+      const empty = $("verdictEmpty");
+      empty.innerHTML =
+        "<b>Ledger hashing is unavailable.</b><br>This page needs a secure context (https) for WebCrypto SHA-256. The demo runs on https; if you see this, the page was opened somewhere it should not have been.";
+      $("proposeBtn").disabled = true;
+      $("rogueBtn").disabled = true;
+      return;
+    }
     const hadSaved = restore();
     renderAll();
     tickClock();

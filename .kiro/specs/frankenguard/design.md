@@ -19,7 +19,7 @@ One direction, no cycles. The engine is a pure function of
 
 ## Module contracts
 
-### parser.js — `parseIntent(text, allowlist)`
+### parser.js: `parseIntent(text, allowlist)`
 
 Returns `{ ok, proposal?, problems[] }`. `problems` names each field that
 failed and why. Matching rules:
@@ -39,7 +39,7 @@ failed and why. Matching rules:
   scanned too, so hiding an injection in the payee span cannot dodge it.
 - Invoice ref: `INV-` + alphanumerics, when present.
 
-### engine.js — `evaluate(proposal, policy, spentTodayCents)`
+### engine.js: `evaluate(proposal, policy, spentTodayCents)`
 
 Returns `{ decision: "PASS" | "REJECT", reason, trace }`. `trace` is an
 array of `{ gate, passed, detail }` in fixed order. Gate semantics:
@@ -60,7 +60,7 @@ array of `{ gate, passed, detail }` in fixed order. Gate semantics:
 Determinism property: same inputs always produce the same verdict. The
 test suite asserts this by evaluating every fixture twice.
 
-### ledger.js — `createLedger(hashFn)`, `append`, `verify`
+### ledger.js: `createLedger(hashFn)`, `append`, `verify`
 
 - Entry: `{ seq, ts, kind, payload, prev, hash }`. `hash` =
   SHA-256 hex of `JSON.stringify({seq, ts, kind, payload, prev})`.
@@ -69,7 +69,7 @@ test suite asserts this by evaluating every fixture twice.
 - Persistence is the app's job (localStorage, key `frankenguard.v1`).
   The ledger module only knows entries and hashes.
 
-### MCP server — `tools/mcp-server/index.js`
+### MCP server: `tools/mcp-server/index.js`
 
 Stdio JSON-RPC 2.0. Methods: `initialize`, `tools/list`, `tools/call`.
 Tools: `evaluate_proposal` (same engine, policy passed by the caller),
