@@ -1,0 +1,1 @@
+{"compilerOptions":{"lib":["ES2022"],"noEmit":false,"outDir":"dist/server","rootDir":"src","sourceMap":true,"types":["node"]},"exclude":["src/web/**"],"extends":"./tsconfig.base.json","include":["src/**/*.ts"]}
