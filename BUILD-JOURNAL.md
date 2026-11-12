@@ -498,6 +498,23 @@ default; no keys anywhere in this repo.
   to the caller's sandbox, reusing the purge_mode bypass so the
   append-only triggers stay the enforcement mechanism everywhere
   else. With the flag off the route does not exist.
+- **D53 — depth limits.** Gap: the specs cap request size (8 KB)
+  but never nesting, and neither canonicalJson nor the request
+  hash stringify had a depth bound. Choice: 100 levels in both.
+  canonicalJson throws its usual "not canonical JSON data"
+  message past the limit, so verifyChain reports the entry
+  broken instead of crashing; the request hash throws
+  InvalidInputError, so an absurdly nested body answers 422
+  before any write. Real bodies and payloads nest a handful of
+  levels; 100 is headroom, not a behavior change.
+- **D54 — unparseable audit payloads.** Gap: no passage defines
+  what the audit view does with a stored payload that is not
+  valid JSON (only a corrupted database can hold one). Choice:
+  the entry is still listed, with an empty payload and a
+  `payloadParseError` marker on the view, and the UI chips it
+  Unparseable and says its contents can't be shown. Skipping
+  the row would have hidden a gap in the trail; failing the
+  whole view punished every other entry for one bad row.
 
 ## Phase 5 — API (13 Nov 2026)
 
@@ -637,3 +654,40 @@ the empty state mid-assertion). The read-only store passthroughs
 are stable callbacks now, the loader depends on listAudit only,
 and the suite is green four runs in a row. Final state: 349
 Vitest tests, 20 Playwright tests, typecheck and lint clean.
+
+## Post-Phase 8 — security audit fixes (13 Nov 2026)
+
+A read-only security audit of the shipped tree found one medium
+and seven lows, no rule-engine bypass, no sandbox escape, no
+chain forgery through the API. Every finding got a regression
+test written to fail first, then the fix, then the auditor's own
+probes re-run where they existed.
+
+The medium was a docs/code mismatch: the deployment notes say
+TRUST_PROXY=1, the code required the string "true", so a
+deployment following the docs ran with proxy trust off and every
+visitor sharing one rate-limit bucket. The code now accepts "1"
+and "true", matching TAMPER_DEMO; env parsing moved to its own
+module so the flag contract is unit-testable. The rotating
+X-Forwarded-For probe confirms it: 11/11 creations, 130 reads,
+zero 429s with TRUST_PROXY=1.
+
+The lows: verifyChain reports broken instead of throwing on a
+stored payload that is not canonical data, with a depth limit in
+canonicalJson (D53); audit views survive one unparseable payload
+by marking the entry instead of 500ing (D54); absurdly nested
+request bodies answer 422 instead of stack-overflowing (D53);
+the audit panel and the Devpost draft now say only what is true
+about editing and about where validation lives; the purge flag
+only ever flips inside a transaction, so it is never visible to
+another connection; and .dockerignore excludes local env files
+from the build context.
+
+Two things the audit left open. `npm audit` could not run from
+this machine (the registry audit endpoint is blocked by egress
+policy), so it stays a pre-deploy step on an unrestricted
+network. And the observations that describe designed behavior —
+agent-run write amplification inside the hard limits, the
+documented NFKC folds, the known tail-truncation limit, the
+rejection-triggered rate-limiter pruning — were left as they
+are, deliberately.
