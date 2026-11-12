@@ -1,0 +1,64 @@
+/* Page layout: the panels grid, the frozen page frame, and the
+   frozen banner placement. Two columns at desktop width, stacked
+   below; grid children never force horizontal scroll. */
+
+.panels {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 24px;
+}
+
+.panels-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+.panels-grid > * {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .panels-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Frozen frame: a fixed --blue frame around the whole page, wiped
+   in over 500ms. The overlay never intercepts pointer input. */
+.page-frozen {
+  min-height: 100vh;
+}
+
+.page-frozen::after {
+  animation: frame-wipe 500ms ease-out;
+  box-shadow: inset 0 0 0 4px var(--blue);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 50;
+}
+
+@keyframes frame-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.frozen-banner-wrap {
+  margin: 16px auto 0;
+  max-width: 1200px;
+  padding: 0 24px;
+}
+
+.frozen-explainer {
+  color: var(--text-info);
+  font-size: var(--text-small);
+  font-weight: var(--fw-medium);
+  margin-top: 8px;
+}

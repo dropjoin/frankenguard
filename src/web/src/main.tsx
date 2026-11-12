@@ -11,6 +11,9 @@ import "./theme/global.css";
 import "./theme/art.css";
 import "./theme/primitives.css";
 import "./theme/chrome.css";
+import "./theme/layout.css";
+import "./theme/panels.css";
+import "./theme/motion.css";
 
 // Deterministic screenshot mode: ?shot=1 disables motion so captures
 // are stable (the playbook's pattern, also used by the e2e suite).

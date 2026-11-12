@@ -40,8 +40,8 @@ function mockClient(overrides: Partial<FrankenguardApi> = {}): FrankenguardApi {
     addRecipient: vi.fn(),
     removeRecipient: vi.fn(),
     setFrozen: vi.fn(),
-    listAudit: vi.fn(),
-    verifyAudit: vi.fn(),
+    listAudit: vi.fn(async () => ({ entries: [], nextAfterSeq: null })),
+    verifyAudit: vi.fn(async () => ({ ok: true, entries: 0, headHash: null })),
     ...overrides,
   } as FrankenguardApi;
 }

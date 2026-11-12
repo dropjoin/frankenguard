@@ -34,12 +34,15 @@ export class SandboxExpiredError extends Error {
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
+  /** Seconds to wait before retrying, from the Retry-After header; null when the server sent none. */
+  readonly retryAfterSeconds: number | null;
 
-  constructor(code: string, status: number, message: string) {
+  constructor(code: string, status: number, message: string, retryAfterSeconds: number | null = null) {
     super(message);
     this.name = "ApiError";
     this.code = code;
     this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -59,7 +62,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const envelope = body as ErrorBody | null;
     const code = typeof envelope?.error?.code === "string" ? envelope.error.code : "UNKNOWN";
     const message = typeof envelope?.error?.message === "string" ? envelope.error.message : `request failed (${res.status})`;
-    throw new ApiError(code, res.status, message);
+    const retryAfter = res.headers.get("retry-after");
+    const parsed = retryAfter === null ? Number.NaN : Number.parseInt(retryAfter, 10);
+    throw new ApiError(code, res.status, message, Number.isInteger(parsed) && parsed > 0 ? parsed : null);
   }
   return body as T;
 }

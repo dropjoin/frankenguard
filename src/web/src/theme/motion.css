@@ -1,0 +1,82 @@
+/* Motion: decision entrance, blocked wiggle, stamp sequence,
+   approved sparks. Every duration stays inside the design caps
+   (decision 250ms, freeze 500ms, sparks/stamps 400ms). Reduced
+   motion and ?shot=1 disable all of it via global.css. */
+
+@keyframes decision-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.decision-card-enter {
+  animation: decision-in 250ms ease-out;
+}
+
+@keyframes blocked-wiggle {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.decision-card-blocked-enter {
+  animation:
+    decision-in 250ms ease-out,
+    blocked-wiggle 400ms ease-out;
+}
+
+@keyframes stamp-light {
+  from {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.stamp-lit {
+  animation: stamp-light 400ms ease-out both;
+}
+
+@keyframes spark-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.15) rotate(6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.verify-sparks .bolt-icon {
+  animation: spark-pop 400ms ease-out both;
+}
+
+.verify-sparks .bolt-icon:nth-child(2) {
+  animation-delay: 120ms;
+}

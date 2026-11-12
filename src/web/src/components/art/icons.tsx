@@ -17,7 +17,10 @@ export function JackOLantern({ className }: { className?: string }) {
       <path d="M13 21 L19 21 L16 26 Z" fill="var(--text-on-fill)" />
       <path d="M29 21 L35 21 L32 26 Z" fill="var(--text-on-fill)" />
       <path d="M22 27 L26 27 L24 30 Z" fill="var(--text-on-fill)" />
-      <path d="M12 31 L17 34 L21 31 L25 34 L29 31 L33 34 L36 31 L34 37 L14 37 Z" fill="var(--text-on-fill)" />
+      <path
+        d="M12 31 L17 34 L21 31 L25 34 L29 31 L33 34 L36 31 L34 37 L14 37 Z"
+        fill="var(--text-on-fill)"
+      />
     </svg>
   );
 }
@@ -31,6 +34,31 @@ export function Snowflake({ className }: { className?: string }) {
         <path d="M6 12 L12 13 M6 12 L8 18 M34 28 L28 27 M34 28 L32 22" strokeWidth="2" />
         <path d="M34 12 L28 13 M34 12 L32 18 M6 28 L12 27 M6 28 L8 22" strokeWidth="2" />
       </g>
+    </svg>
+  );
+}
+
+// TornStitch: a stitch line torn in the middle, for the broken-chain
+// state. Two dashed segments with loose threads hanging in the gap.
+
+export function TornStitch({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" className={className} role="presentation" viewBox="0 0 48 16">
+      <path
+        d="M2 8 H18 M30 8 H46"
+        fill="none"
+        stroke="var(--error)"
+        strokeDasharray="4 3"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M21 8 L24 2 M24 8 L22 14 M27 8 L29 3"
+        fill="none"
+        stroke="var(--error)"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
     </svg>
   );
 }

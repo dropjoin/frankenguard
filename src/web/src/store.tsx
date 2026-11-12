@@ -21,6 +21,7 @@ export interface Store {
   reset: () => Promise<void>;
   runAgent: FrankenguardApi["runAgent"];
   submitProposal: FrankenguardApi["submitProposal"];
+  getProposal: FrankenguardApi["getProposal"];
   updateCaps: FrankenguardApi["updateCaps"];
   addRecipient: FrankenguardApi["addRecipient"];
   removeRecipient: FrankenguardApi["removeRecipient"];
@@ -141,6 +142,7 @@ export function StoreProvider({ client, children }: { client?: FrankenguardApi; 
       },
       runAgent: (body) => afterMutation(() => apiClient.runAgent(body)),
       submitProposal: (body) => afterMutation(() => apiClient.submitProposal(body)),
+      getProposal: (id) => apiClient.getProposal(id),
       updateCaps: (body) => afterMutation(() => apiClient.updateCaps(body)),
       addRecipient: (body) => afterMutation(() => apiClient.addRecipient(body)),
       removeRecipient: (body) => afterMutation(() => apiClient.removeRecipient(body)),

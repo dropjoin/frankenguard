@@ -89,6 +89,17 @@ select {
   font-family: var(--font-mono);
 }
 
+/* Visually hidden but announced: aria-live regions and
+   screen-reader-only labels. */
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 /* Reduced motion: everything still works, nothing moves. */
 @media (prefers-reduced-motion: reduce) {
   *,

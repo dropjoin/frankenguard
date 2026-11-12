@@ -449,6 +449,38 @@ default; no keys anywhere in this repo.
   clamp(1.25rem, 2.5vw, 1.5rem), small 0.875rem, label 0.75rem.
   Fluid clamps keep 375px headings inside the viewport without a
   separate mobile scale.
+- **D45 — live prompt box.** Gap: task 7.2 names an "optional live
+  prompt box" without saying when it appears. Choice: shown only
+  when the server reports agentMode live; in scripted mode the
+  panel says plainly that the live agent is disabled, instead of
+  showing a dead input.
+- **D46 — "Agent proposal" badge.** Gap: ProposalResponse carries
+  no actor, so the client cannot tell agent proposals from manual
+  ones from state alone. Choice: the App tracks the proposal ids
+  returned by the most recent agent run in this session and badges
+  those cards; a manual submission clears the set.
+- **D47 — verified ghost.** Gap: the ghost has a verified state
+  but no specified lifetime. Choice: it shows after a successful
+  chain verification and lasts until the next audit entry lands
+  (tracked through the audit head count), then the ghost goes
+  back to reacting to verdicts.
+- **D48 — retry-after.** Gap: the 429 notice needs a wait time the
+  error envelope does not carry. Choice: ApiError parses the
+  Retry-After response header into retryAfterSeconds (null when
+  absent); the notice shows the wait only when the server sent one.
+- **D49 — scenario labels.** Gap: design §5.2 fixes the scenario
+  amounts and outcomes but no button copy. Choice: labels and one
+  -line descriptions derived from the §5.2 prose, using the fixed
+  amounts where the design states them ($100 happy path, $750
+  over-per-tx, $100 frozen, $5,000 injection).
+- **D50 — INVALID_PROPOSAL field messages.** Gap: the proposal
+  response carries no field-level detail, but task 7.2 wants
+  field messages. Choice: field-level messages come from
+  client-side validation that mirrors the engine grammar
+  (recipient shape, the strict decimal parser, memo length); a
+  server INVALID_PROPOSAL renders a generic check-the-fields
+  notice plus the decision-level card. The server stays
+  authoritative; the client checks are UX only.
 
 ## Phase 5 — API (13 Nov 2026)
 
@@ -493,3 +525,32 @@ transform (it also rewrites `new URL` asset patterns), so the
 theme/art tests resolve fixture paths from process.cwd().
 270 tests green (213 before).
 
+
+## Phase 7 — Frontend features (13 Nov 2026)
+
+Four panels wired to the store. Agent: six scenario buttons (the
+frozen one stays disabled with a visible hint until freeze is on),
+the live prompt box only in live mode (D45), and the manual form
+with float-free cents conversion and client-side field checks
+mirroring the engine grammar (D50). Decisions: cards newest-first
+with 6px rails, four rule rows in fixed order, reason codes in
+mono, the lab strip lighting its stamps in sequence, the ghost
+driven by the latest outcome, expandable bundle detail, and the
+aria-live announcement. "Caught by FrankenGuard!" appears only
+when a rule actually caught the proposal — decision-level cards
+(INVALID_PROPOSAL, ENGINE_ERROR) get the plain note instead, since
+no rule ran. Controls: caps form, allowlist chips, freeze switch,
+meter with the three breakpoints and captions, and the UTC reset
+countdown. Audit: filters, expandable payloads in a light terminal
+block, linked-entry highlighting, a support ghost every fifth
+line, and the verify control with intact/broken states plus the
+truncation caveat stated in the open. Frozen theming is a fixed
+--blue frame wiped in over 500ms, the info banner, and the info
+rail on Controls. Motion stays inside the caps (250/400/500ms)
+and dies under reduced motion. Error states share one mapping:
+warning banners for expired/rate-limited/limited sandboxes, error
+banners for audit outages and network failures, each with a
+pumpkin action button. Agent text is rendered as text everywhere;
+the XSS tests prove no elements are created from hostile memos
+and payloads. 338 tests green (270 before). The axe pass (7.9)
+rides with the Playwright suite in Phase 8.
