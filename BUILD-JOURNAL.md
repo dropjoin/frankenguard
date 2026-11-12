@@ -571,3 +571,69 @@ pumpkin action button. Agent text is rendered as text everywhere;
 the XSS tests prove no elements are created from hostile memos
 and payloads. 338 tests green (270 before). The axe pass (7.9)
 rides with the Playwright suite in Phase 8.
+
+## Phase 8 — Hardening, screenshots, container, docs (13 Nov 2026)
+
+Static serving (8.1): the server serves the built client with an
+SPA fallback that can never shadow the API (D51), plus a smoke
+script that boots the built server and checks the page and the
+sandbox flow. The tamper demo (8.6) is a flag-gated endpoint
+scoped to the caller's sandbox (D52). Building it caught a real
+bug: the `audit_no_update` trigger had no purge-mode clause, so
+every update aborted unconditionally. The fix is migration 002
+(drop and recreate the trigger with the purge check), the
+corrected definition in schema.sql for fresh databases, and a
+migrate.ts that applies versions sequentially. Fresh databases
+carry schema rows {1, 2}; a v1 database upgrades in place, proven
+by test.
+
+End to end (8.2): a serial Playwright journey (shared contexts,
+because sandbox creation is budgeted), the axe pass (7.9) with no
+serious or critical violations on the default, blocked, and frozen
+states, and no-horizontal-scroll checks at 375/768/1280. Two
+selector lessons: `getByText` is a case-insensitive substring
+match, so status words need exact matching scoped to the header,
+and the frozen banner text also appears in rule messages, so the
+banner needs its own scope. 20 tests green on desktop + mobile.
+Playwright is pinned at 1.50.1; @axe-core/playwright 4.14 wanted
+a newer playwright-core, so an override pins one copy of
+playwright-core 1.50.1 for the whole tree, verified both by
+typecheck and by the axe tests running for real.
+
+Visual QA (8.3): a screenshot script captures six states
+(default, approved, blocked, frozen, verified, broken-chain) at
+three viewports, committed for review. The first pass caught five
+real defects: the monster head rendered unbound (its sizing class
+was never applied), the audit filter options truncated in their
+columns, the toggle thumb never moved (a flex-order trick that
+left it in one place), the frozen frame was viewport-fixed and
+cut across full-page captures (now page-absolute, framing the
+whole page), and the snowflake icon was invisible on the info
+fill. All five fixed, screenshots recaptured, snapshots updated
+for the one intentional class change.
+
+Container (8.4): a two-stage Dockerfile (node:20 builder,
+node:20-slim runtime, volume for the database, /healthz
+healthcheck, non-root user) plus deployment notes. No Docker
+daemon exists on the build machine, so the image was not run end
+to end; the doc says so plainly. What was verified instead: the
+runtime stage's exact dependency set, and the built server
+booting from a production-only install and serving the UI and
+the sandbox flow.
+
+Docs (8.5): README, demo walkthrough, and Devpost draft rewritten
+for the shipped four-rule app; the six-gate copy is gone. The
+Devpost draft keeps placeholders for the demo URL and video,
+which only exist at deploy time. Verified by fresh clone: clone,
+npm ci, 349 tests green, build, boot, sandbox creation, and a
+happy-path approval through the real API, all from the README
+commands alone.
+
+One more fix belongs to this phase even though it surfaced in the
+final verification: the audit empty-state test flaked because the
+timeline refetched on every store change (its loader depended on
+the whole store object, and the first getState landing detached
+the empty state mid-assertion). The read-only store passthroughs
+are stable callbacks now, the loader depends on listAudit only,
+and the suite is green four runs in a row. Final state: 349
+Vitest tests, 20 Playwright tests, typecheck and lint clean.
