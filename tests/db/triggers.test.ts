@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { withPurgeMode } from "../../src/db/migrate.js";
+import { withImmediateTransaction, withPurgeMode } from "../../src/db/migrate.js";
 import { appendAudit, GENESIS_PREV_HASH } from "../../src/services/audit/chain.js";
 import { openTestDb } from "./helpers.js";
 
@@ -45,8 +45,10 @@ describe("audit triggers", () => {
       payload: {},
     });
     expect(() => db.prepare("DELETE FROM audit_log WHERE seq = ?").run(seq)).toThrow(/append-only/);
-    withPurgeMode(db, () => {
-      db.prepare("DELETE FROM audit_log WHERE seq = ?").run(seq);
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("DELETE FROM audit_log WHERE seq = ?").run(seq);
+      });
     });
     expect(db.prepare("SELECT COUNT(*) AS n FROM audit_log").get()).toEqual({ n: 0 });
   });

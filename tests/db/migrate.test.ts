@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { migrate, openDb, SCHEMA_VERSION } from "../../src/db/migrate.js";
+import {
+  migrate,
+  openDb,
+  SCHEMA_VERSION,
+  withImmediateTransaction,
+  withPurgeMode,
+} from "../../src/db/migrate.js";
 
 describe("migrate", () => {
   it("creates every table on a fresh database", () => {
@@ -78,5 +84,40 @@ describe("migrate", () => {
         .prepare("INSERT INTO config (sandbox_id, per_tx_cap_cents, daily_cap_cents, updated_at) VALUES (?, 1, 1, 'x')")
         .run("no-such-sandbox"),
     ).toThrow(/FOREIGN KEY/);
+  });
+});
+
+describe("withPurgeMode", () => {
+  it("refuses to run outside a transaction, so the flag is never visible to another connection", () => {
+    const db = openDb(":memory:");
+    expect(() => withPurgeMode(db, () => {})).toThrow(/inside a transaction/);
+    const flag = db.prepare("SELECT active FROM purge_mode WHERE id = 1").get() as { active: number };
+    expect(flag.active).toBe(0);
+  });
+
+  it("runs inside a transaction and restores the flag when the work is done", () => {
+    const db = openDb(":memory:");
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        const flag = db.prepare("SELECT active FROM purge_mode WHERE id = 1").get() as { active: number };
+        expect(flag.active).toBe(1);
+      });
+    });
+    const flag = db.prepare("SELECT active FROM purge_mode WHERE id = 1").get() as { active: number };
+    expect(flag.active).toBe(0);
+  });
+
+  it("rolls the flag back with the transaction when the work throws", () => {
+    const db = openDb(":memory:");
+    expect(() =>
+      withImmediateTransaction(db, () => {
+        withPurgeMode(db, () => {
+          throw new Error("boom");
+        });
+      }),
+    ).toThrow("boom");
+    const flag = db.prepare("SELECT active FROM purge_mode WHERE id = 1").get() as { active: number };
+    expect(flag.active).toBe(0);
+    expect(db.inTransaction).toBe(false);
   });
 });

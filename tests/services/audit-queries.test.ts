@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { withPurgeMode } from "../../src/db/migrate.js";
+import { withImmediateTransaction, withPurgeMode } from "../../src/db/migrate.js";
 import { getProposalBundle, listAudit } from "../../src/services/audit/queries.js";
 import { submitProposal } from "../../src/services/proposals.js";
 import { createSandbox } from "../../src/services/sandbox.js";
@@ -80,12 +80,14 @@ describe("listAudit", () => {
     const { db, clock, sandbox } = makeTestDb();
     seed(db, clock, sandbox.id);
     const before = listAudit(db, sandbox.id, { limit: 100 });
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND seq = ?").run(
-        "{not json}",
-        sandbox.id,
-        before.entries[1]!.seq,
-      );
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND seq = ?").run(
+          "{not json}",
+          sandbox.id,
+          before.entries[1]!.seq,
+        );
+      });
     });
     const after = listAudit(db, sandbox.id, { limit: 100 });
     expect(after.entries).toHaveLength(before.entries.length);
@@ -131,12 +133,14 @@ describe("getProposalBundle", () => {
   it("marks a linked entry whose payload cannot be parsed instead of failing the bundle", () => {
     const { db, clock, sandbox } = makeTestDb();
     const { approved } = seed(db, clock, sandbox.id);
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND proposal_id = ? AND type = 'DECISION_MADE'").run(
-        "{not json}",
-        sandbox.id,
-        approved.proposalId,
-      );
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND proposal_id = ? AND type = 'DECISION_MADE'").run(
+          "{not json}",
+          sandbox.id,
+          approved.proposalId,
+        );
+      });
     });
     const bundle = getProposalBundle(db, sandbox.id, approved.proposalId);
     expect(bundle.decision?.outcome).toBe("APPROVED");

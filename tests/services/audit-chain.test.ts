@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
 
-import { withPurgeMode } from "../../src/db/migrate.js";
+import { withImmediateTransaction, withPurgeMode } from "../../src/db/migrate.js";
 import { appendAudit, computeHash, GENESIS_PREV_HASH, verifyChain } from "../../src/services/audit/chain.js";
 import { canonicalJson } from "../../src/shared/canonicalJson.js";
 import { openTestDb } from "../db/helpers.js";
@@ -143,8 +143,10 @@ describe("appendAudit + verifyChain", () => {
     // A float can only reach the stored payload by corrupting the DB
     // file directly: appendAudit canonicalizes at write time. The
     // verifier must still answer "broken" instead of crashing.
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run('{"amountCents": 1.5, "x": true}');
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run('{"amountCents": 1.5, "x": true}');
+      });
     });
     const result = verifyChain(db, "sb-1");
     expect(result.ok).toBe(false);
@@ -166,8 +168,10 @@ describe("appendAudit + verifyChain", () => {
     });
     let deep: unknown = [];
     for (let i = 0; i < 3000; i++) deep = [deep];
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run(JSON.stringify(deep));
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run(JSON.stringify(deep));
+      });
     });
     const result = verifyChain(db, "sb-1");
     expect(result.ok).toBe(false);
@@ -189,8 +193,10 @@ describe("appendAudit + verifyChain", () => {
         payload: { i },
       });
     }
-    withPurgeMode(db, () => {
-      db.prepare("DELETE FROM audit_log WHERE seq >= 4").run();
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("DELETE FROM audit_log WHERE seq >= 4").run();
+      });
     });
     const result = verifyChain(db, "sb-1");
     expect(result.ok).toBe(true);

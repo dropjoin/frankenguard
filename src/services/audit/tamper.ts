@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 
-import { withPurgeMode } from "../../db/migrate.js";
+import { withImmediateTransaction, withPurgeMode } from "../../db/migrate.js";
 
 // Demo-only chain tampering (task 8.6). Replaces one entry's payload
 // with a marker, reusing the privileged purge-mode bypass the sandbox
@@ -15,12 +15,14 @@ export function tamperAuditEntry(db: Database.Database, sandboxId: string, seq: 
     .prepare("SELECT seq FROM audit_log WHERE sandbox_id = ? AND seq = ?")
     .get(sandboxId, seq) as { seq: number } | undefined;
   if (!row) return false;
-  withPurgeMode(db, () => {
-    db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND seq = ?").run(
-      JSON.stringify({ tampered: true, note: "this entry was edited by the tamper demo" }),
-      sandboxId,
-      seq,
-    );
+  withImmediateTransaction(db, () => {
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND seq = ?").run(
+        JSON.stringify({ tampered: true, note: "this entry was edited by the tamper demo" }),
+        sandboxId,
+        seq,
+      );
+    });
   });
   return true;
 }

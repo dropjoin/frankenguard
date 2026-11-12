@@ -59,8 +59,19 @@ export function openDb(path: string): Database.Database {
   return db;
 }
 
-/** Run `fn` with the purge flag on, restoring it afterwards. Only the sandbox purge path and the flag-gated tamper demo may use this. */
+/**
+ * Run `fn` with the purge flag on, restoring it afterwards. Only the
+ * sandbox purge path and the flag-gated tamper demo may use this.
+ * Must run inside a transaction: the flag flip is a plain UPDATE, so
+ * flipping it outside a transaction would auto-commit and stay
+ * visible to any other connection until the work finished. Inside a
+ * transaction the flip is only ever visible to this connection, and
+ * a rollback restores the flag with everything else.
+ */
 export function withPurgeMode<T>(db: Database.Database, fn: () => T): T {
+  if (!db.inTransaction) {
+    throw new Error("withPurgeMode must run inside a transaction");
+  }
   db.prepare("UPDATE purge_mode SET active = 1 WHERE id = 1").run();
   try {
     return fn();

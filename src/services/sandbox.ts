@@ -136,8 +136,8 @@ export function getSandbox(db: Database.Database, id: string): Sandbox | null {
 }
 
 function purgeSandbox(db: Database.Database, id: string): void {
-  withPurgeMode(db, () => {
-    withImmediateTransaction(db, () => {
+  withImmediateTransaction(db, () => {
+    withPurgeMode(db, () => {
       createRepositories(db).sandboxes.deleteById(id);
     });
   });

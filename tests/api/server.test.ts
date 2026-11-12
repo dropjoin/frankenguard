@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { withPurgeMode } from "../../src/db/migrate.js";
+import { withImmediateTransaction, withPurgeMode } from "../../src/db/migrate.js";
 import { cookieFromResponse, makeApp, newSandbox, withCookie } from "./helpers.js";
 
 describe("health and sandbox session", () => {
@@ -332,8 +332,10 @@ describe("audit API", () => {
   it("verify reports broken with a 200, never a 500, when a stored payload is not canonical data", async () => {
     const { app, db } = await makeApp();
     const { cookie, sandboxId } = await newSandbox(app);
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ?").run('{"amountCents": 1.5}', sandboxId);
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ?").run('{"amountCents": 1.5}', sandboxId);
+      });
     });
     const verify = await app.inject(withCookie(cookie, { method: "GET", url: "/api/audit/verify" }));
     expect(verify.statusCode).toBe(200);
@@ -350,11 +352,13 @@ describe("audit API", () => {
         payload: { recipient: "acme-corp", amountCents: 10_000, currency: "USD", memo: "" },
       }),
     );
-    withPurgeMode(db, () => {
-      db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND type = 'PROPOSAL_RECEIVED'").run(
-        "{not json}",
-        sandboxId,
-      );
+    withImmediateTransaction(db, () => {
+      withPurgeMode(db, () => {
+        db.prepare("UPDATE audit_log SET payload = ? WHERE sandbox_id = ? AND type = 'PROPOSAL_RECEIVED'").run(
+          "{not json}",
+          sandboxId,
+        );
+      });
     });
     const list = await app.inject(withCookie(cookie, { method: "GET", url: "/api/audit?limit=200" }));
     expect(list.statusCode).toBe(200);
