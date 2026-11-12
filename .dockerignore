@@ -11,3 +11,6 @@ test-results
 playwright-report
 screenshots
 .kiro
+.env
+.env.*
+!.env.example
