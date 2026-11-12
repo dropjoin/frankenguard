@@ -1,69 +1,15 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { createLiveAgent } from "../agents/live.js";
 import { openDb } from "../db/migrate.js";
 import { sweepExpired } from "../services/sandbox.js";
 import { SystemClock } from "../shared/clock.js";
+import { readEnv } from "./env.js";
 import { buildApp } from "./server.js";
 
-// Server entrypoint. Configuration is environment variables, all with
-// safe defaults for local development. The live agent is off unless
-// AGENT_PROVIDER=live AND a key is present; asking for live without a
-// key fails startup loudly instead of running half-configured.
-
-function readEnv(): {
-  port: number;
-  host: string;
-  dbPath: string;
-  trustProxy: boolean;
-  cookieSecure: boolean;
-  agentMode: "scripted" | "live";
-  agentApiKey: string | undefined;
-  agentModel: string;
-  agentBaseUrl: string;
-  webRoot: string | undefined;
-  tamperDemo: boolean;
-} {
-  const port = Number(process.env.PORT ?? "3000");
-  if (!Number.isSafeInteger(port) || port < 1 || port > 65535) {
-    throw new Error(`PORT must be an integer 1-65535, got ${process.env.PORT ?? "3000"}`);
-  }
-  const provider = process.env.AGENT_PROVIDER ?? "scripted";
-  if (provider !== "scripted" && provider !== "live") {
-    throw new Error(`AGENT_PROVIDER must be "scripted" or "live", got ${JSON.stringify(provider)}`);
-  }
-  const agentApiKey = process.env.AGENT_API_KEY;
-  if (provider === "live" && !agentApiKey) {
-    throw new Error("AGENT_PROVIDER=live requires AGENT_API_KEY");
-  }
-  // The built SPA lives next to the built server (dist/web). A
-  // missing web root fails startup in production, where the demo
-  // must serve the page; in development the Vite dev server owns
-  // the SPA, so the API runs alone with a warning.
-  const production = process.env.NODE_ENV === "production";
-  const webRoot = process.env.WEB_ROOT ?? fileURLToPath(new URL("../../web", import.meta.url));
-  if (!existsSync(webRoot)) {
-    if (production) {
-      throw new Error(`web root not found at ${webRoot}; run npm run build first`);
-    }
-    console.warn(`web root not found at ${webRoot}; serving the API only`);
-  }
-  return {
-    port,
-    host: process.env.HOST ?? "0.0.0.0",
-    dbPath: process.env.DB_PATH ?? "./data/frankenguard.db",
-    trustProxy: process.env.TRUST_PROXY === "true",
-    cookieSecure: production,
-    agentMode: provider,
-    agentApiKey,
-    agentModel: process.env.AGENT_MODEL ?? "gpt-4o-mini",
-    agentBaseUrl: process.env.AGENT_BASE_URL ?? "https://api.openai.com/v1",
-    webRoot: existsSync(webRoot) ? webRoot : undefined,
-    tamperDemo: process.env.TAMPER_DEMO === "1",
-  };
-}
+// Server entrypoint. Configuration lives in env.ts; the live agent
+// is off unless AGENT_PROVIDER=live AND a key is present.
 
 export function startSweeper(
   db: ReturnType<typeof openDb>,
