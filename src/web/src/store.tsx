@@ -129,6 +129,17 @@ export function StoreProvider({ client, children }: { client?: FrankenguardApi; 
     [refresh],
   );
 
+  // Read-only passthroughs stay stable across state changes, so
+  // panels that load in an effect (the audit timeline) do not
+  // refetch every time the store object is recreated. Only the
+  // audit head count and the filters should retrigger a load.
+  const getProposal = useCallback((id: string) => apiClient.getProposal(id), [apiClient]);
+  const listAudit = useCallback(
+    (query: Parameters<FrankenguardApi["listAudit"]>[0]) => apiClient.listAudit(query),
+    [apiClient],
+  );
+  const verifyAudit = useCallback(() => apiClient.verifyAudit(), [apiClient]);
+
   const store = useMemo<Store>(
     () => ({
       status,
@@ -142,15 +153,15 @@ export function StoreProvider({ client, children }: { client?: FrankenguardApi; 
       },
       runAgent: (body) => afterMutation(() => apiClient.runAgent(body)),
       submitProposal: (body) => afterMutation(() => apiClient.submitProposal(body)),
-      getProposal: (id) => apiClient.getProposal(id),
+      getProposal,
       updateCaps: (body) => afterMutation(() => apiClient.updateCaps(body)),
       addRecipient: (body) => afterMutation(() => apiClient.addRecipient(body)),
       removeRecipient: (body) => afterMutation(() => apiClient.removeRecipient(body)),
       setFrozen: (body) => afterMutation(() => apiClient.setFrozen(body)),
-      listAudit: (query) => apiClient.listAudit(query),
-      verifyAudit: () => apiClient.verifyAudit(),
+      listAudit,
+      verifyAudit,
     }),
-    [status, state, error, refresh, startFreshSandbox, apiClient, afterMutation],
+    [status, state, error, refresh, startFreshSandbox, apiClient, afterMutation, getProposal, listAudit, verifyAudit],
   );
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

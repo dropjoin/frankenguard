@@ -104,7 +104,10 @@ export function AuditPanel({
       const result = await store.listAudit(query);
       return result;
     },
-    [store, outcome, code, appliedRecipient],
+    // store.listAudit is a stable callback (see store.tsx); depending
+    // on the whole store object refetched the timeline on every state
+    // change, including the first load landing.
+    [store.listAudit, outcome, code, appliedRecipient],
   );
 
   // Reload from the start whenever the filters change or new entries

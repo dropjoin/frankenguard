@@ -1,1 +1,1 @@
-{"compilerOptions":{"lib":["ES2022"],"noEmit":true,"types":["node"]},"exclude":["src/web/**","tests/web/**"],"extends":"./tsconfig.base.json","include":["src/**/*.ts","tests/**/*.ts","e2e/**/*.ts","scripts/**/*.ts"]}
+{"compilerOptions":{"lib":["ES2022","DOM"],"noEmit":true,"types":["node"]},"exclude":["src/web/**","tests/web/**"],"extends":"./tsconfig.base.json","include":["src/**/*.ts","tests/**/*.ts","e2e/**/*.ts","scripts/**/*.ts"]}
