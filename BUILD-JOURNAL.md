@@ -136,3 +136,91 @@ Live at https://frankenguard.apeagent.online, byte-identical to
 secrets in the tree (the verifier scans before every push). The demo
 video and the Devpost submission are still to come; the submission draft
 is in `docs/devpost-draft.md`.
+
+---
+
+## 2026-11-13: the Kiro specs arrive, and the pre-STOP build goes
+
+The Kiro Web spec session produced the real spec stack, now in
+`.kiro/specs/frankenguard/` (requirements.md, design.md, tasks.md, plus
+RETRIEVAL-NOTES.md marking the passages the retrieval could not verify).
+The spec stack is authoritative. The pre-STOP code I wrote on 2026-11-12
+was built from my own short drafts, and in several places it contradicts
+the Kiro spec outright. I assessed every file against the spec before
+touching anything. The snapshot commit 9844818 preserves the old build
+exactly; nothing below is lost, it is superseded.
+
+### Keep / port / rebuild decisions
+
+**Rebuild: `src/engine.js` → TypeScript engine per design §2.4.** The
+old engine has six gates; the spec has exactly four rules in fixed
+order, one Reason each, always all four evaluated. Worse, the old
+engine's memo guardrail gate REJECTS on injection patterns, which
+directly violates R1.10/R2.10/R7.19: the decision must never depend on
+memo text, and the prompt-injection scenario must fail on the allowlist
+and per-tx cap, not on what the memo says. Reason codes, verdict names,
+default caps ($250/$500 vs the spec's $500/$1,000), and the skipped-gate
+`null` all differ too. Ported forward: the integer-cents formatting
+approach, and the normalization rigor (zero-width and exotic-whitespace
+handling), adapted to the spec's NFKC + lowercase + trim + 1-64 rule.
+
+**Rebuild: `src/ledger.js` → SQLite-backed hash chain.** The old chain
+is in-memory, 0-based, genesis `FRANKENGUARD-GENESIS`, fixed-order
+`JSON.stringify`, async injected hashing. The spec wants better-sqlite3,
+AUTOINCREMENT seq, 64-zero genesis prev_hash, sorted-key canonical JSON
+that rejects floats, sync SHA-256, and integrity triggers. Ported
+forward: the fail-fast verify loop shape (`brokenAtSeq`).
+
+**Drop as a module, port the grammar: `src/parser.js`.** The spec has no
+intent parser: the live agent returns structured JSON validated by Zod,
+and the manual form takes typed inputs. But the strict BigInt
+decimal-to-cents grammar is good work with real edge-case tests, and
+task 7.2 needs float-free dollar conversion in the form. It survives as
+`shared/money.ts` `parseDecimalToCents`. The payee-resolution and
+invoice-ref machinery has no spec consumer and goes.
+
+**Remove: `tools/mcp-server/`, `.kiro/settings/mcp.json`,
+`tests/mcp.test.js`.** No MCP component exists in the Kiro architecture,
+and the server wraps the old six-gate engine, so it would report reason
+codes the spec does not define. The reviewer agent doc is rewritten to
+match (it keeps the skeptical posture, loses the dead tool references).
+
+**Remove and rebuild: `app/`, `dist/`, `scripts/`.** The old console UI
+is vanilla JS, dark-themed, and localStorage-based. The spec requires
+React 18 + Vite + TypeScript, a binding LIGHT-ONLY theme, and a
+server-side SQLite audit trail served by Fastify. The old UI's copy
+also describes six gates. Ported forward: the `?shot=1` deterministic
+screenshot idea (as a Playwright screenshot script with reduced-motion
+emulation), and the `verify.mjs` static-check ideas (title rule, secret
+scan, honesty labels) as Vitest guard tests. `deploy.py` (Cloudflare
+Worker, static file) is superseded by the Dockerfile in task 8.4.
+
+**Rebuild: `tests/` in Vitest.** The node:test suites test the old
+modules. Test CASES survive where the spec agrees (boundary values,
+Unicode traps, UTC-midnight edges); memo-guardrail and parser tests are
+rewritten, because prompt injection must now assert memo independence.
+
+**Rewrite: `.kiro/steering/*.md`.** The old steering contradicts the
+spec on stack (vanilla vs TypeScript/Fastify), gates (six vs four),
+reason codes, ledger (localStorage vs SQLite), and theme (dark violet
+night vs light-only). The product metaphor and the non-negotiables that
+still hold (deterministic, fail closed, no real money, integer cents)
+stay.
+
+**Keep: `docs/research.md`, `docs/competitor-scan.md`,
+`docs/color-study.md`, `LICENSE`.** Background and license; the
+competitor scan still sets the bar (CodeVault already ships a SHA-256
+chain; the differentiator is the live decision loop a judge can attack).
+
+**Rewrite in Phase 8.5: `README.md`, `docs/devpost-draft.md`.** Both
+describe the old six-gate app. Identity in both is already correct
+(dropjoin / M Aziz Yahya / dropjoin0@gmail.com); the repo-wide scan
+found no other account or email anywhere.
+
+### Derivations from truncated spec passages
+
+RETRIEVAL-NOTES.md marks what the retrieval could not verify. Each gap
+is filled from requirements.md (complete) plus the design prose, and
+logged here as a derivation, never as Kiro-verbatim. The running list
+lives in the "Derivations" section at the end of this journal; every
+entry names the gap, the sources used, and the choice made.
