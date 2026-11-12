@@ -1,12 +1,1 @@
-{
-  "action": {
-    "command": "npm run build && npm run verify",
-    "type": "command"
-  },
-  "description": "Rebuild the deployable file and run the static verifier before anything is committed, so dist/index.html can never drift from src/ and no secret can slip into git history.",
-  "enabled": true,
-  "name": "verify-before-commit",
-  "trigger": {
-    "type": "preCommit"
-  }
-}
+{"action":{"command":"npm run typecheck && npm run lint && npm test && npm run build","type":"command"},"description":"Typecheck, lint, test, and build before anything is committed, so a broken build or a failing suite can never land in git history.","enabled":true,"name":"verify-before-commit","trigger":{"type":"preCommit"}}
