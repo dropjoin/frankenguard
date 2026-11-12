@@ -130,6 +130,53 @@ describe("appendAudit + verifyChain", () => {
     }
   });
 
+  it("reports broken, never throws, when a stored payload is not canonical JSON data", () => {
+    const db = openTestDb();
+    seedSandbox(db);
+    appendAudit(db, "sb-1", {
+      type: "SANDBOX_CREATED",
+      ts: "2026-11-13T00:00:00.000Z",
+      actor: "system",
+      proposalId: null,
+      payload: {},
+    });
+    // A float can only reach the stored payload by corrupting the DB
+    // file directly: appendAudit canonicalizes at write time. The
+    // verifier must still answer "broken" instead of crashing.
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run('{"amountCents": 1.5, "x": true}');
+    });
+    const result = verifyChain(db, "sb-1");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.brokenAtSeq).toBe(1);
+      expect(result.reason).toBe("payload is not canonical JSON data");
+    }
+  });
+
+  it("reports broken, never throws, when a stored payload is nested past the depth limit", () => {
+    const db = openTestDb();
+    seedSandbox(db);
+    appendAudit(db, "sb-1", {
+      type: "SANDBOX_CREATED",
+      ts: "2026-11-13T00:00:00.000Z",
+      actor: "system",
+      proposalId: null,
+      payload: {},
+    });
+    let deep: unknown = [];
+    for (let i = 0; i < 3000; i++) deep = [deep];
+    withPurgeMode(db, () => {
+      db.prepare("UPDATE audit_log SET payload = ? WHERE seq = 1").run(JSON.stringify(deep));
+    });
+    const result = verifyChain(db, "sb-1");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.brokenAtSeq).toBe(1);
+      expect(result.reason).toBe("payload is not canonical JSON data");
+    }
+  });
+
   it("does NOT detect tail truncation, by design (documented limitation)", () => {
     const db = openTestDb();
     seedSandbox(db);

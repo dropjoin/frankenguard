@@ -141,14 +141,30 @@ export function verifyChain(db: Database.Database, sandboxId: string): VerifyRes
         reason: "payload is not valid JSON",
       };
     }
-    const recomputed = computeHash(row.prev_hash, {
-      seq: row.seq,
-      type: row.type,
-      ts: row.ts,
-      actor: row.actor,
-      proposalId: row.proposal_id,
-      payload,
-    });
+    // The recompute can throw on a stored payload that parses but is
+    // not canonical data (a float, absurd nesting): only a corrupted
+    // database can hold one, since appendAudit canonicalizes at write
+    // time. The verifier answers "broken", never throws, so one bad
+    // row cannot take down verification for the whole sandbox.
+    let recomputed: string;
+    try {
+      recomputed = computeHash(row.prev_hash, {
+        seq: row.seq,
+        type: row.type,
+        ts: row.ts,
+        actor: row.actor,
+        proposalId: row.proposal_id,
+        payload,
+      });
+    } catch {
+      return {
+        ok: false,
+        entries: rows.length,
+        headHash: rows[rows.length - 1]?.hash ?? null,
+        brokenAtSeq: row.seq,
+        reason: "payload is not canonical JSON data",
+      };
+    }
     if (recomputed !== row.hash) {
       return {
         ok: false,

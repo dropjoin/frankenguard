@@ -40,4 +40,16 @@ describe("canonicalJson", () => {
   it("rejects unsafe integers", () => {
     expect(() => canonicalJson({ n: Number.MAX_SAFE_INTEGER + 1 })).toThrow("not canonical JSON data");
   });
+
+  it("rejects absurdly deep nesting with a clean error, never a stack overflow", () => {
+    let deep: unknown = [];
+    for (let i = 0; i < 3000; i++) deep = [deep];
+    expect(() => canonicalJson(deep)).toThrow("not canonical JSON data");
+  });
+
+  it("still stringifies deeply nested but sane structures", () => {
+    let nested: unknown = 1;
+    for (let i = 0; i < 50; i++) nested = [nested];
+    expect(canonicalJson(nested)).toBe(`${"[".repeat(50)}1${"]".repeat(50)}`);
+  });
 });
