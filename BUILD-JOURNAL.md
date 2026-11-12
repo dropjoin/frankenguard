@@ -433,6 +433,22 @@ default; no keys anywhere in this repo.
   and the new cookie.
 - **D42 — recent proposals.** Gap: StateResponse carries
   recentProposals without a count. Choice: the 10 most recent.
+- **D43 — published contrast ratios.** Gap: the ratios printed in
+  design §8.4.1 do not reproduce exactly under the standard WCAG
+  relative-luminance formula (e.g. text-body on base-gray computes
+  13.11:1, not the published 15.00:1; brand on gray 6.55 vs 6.85;
+  success on gray 6.37 vs 6.06). Choice: the 4.5:1 threshold is
+  binding and is enforced by computation in the theme tests; the
+  published decimals are treated as approximations and are never
+  asserted. Every pair still passes the threshold — the worst is
+  brand-alt on lavender at 4.56.
+- **D44 — type scale sizes.** Gap: design §8.4.1 fixes only
+  --text-base (1rem) and the line-heights/tracking; display sizes
+  are not specified. Choice: display-1 clamp(2.5rem, 6vw, 4rem),
+  display-2 clamp(1.75rem, 4vw, 2.5rem), display-3
+  clamp(1.25rem, 2.5vw, 1.5rem), small 0.875rem, label 0.75rem.
+  Fluid clamps keep 375px headings inside the viewport without a
+  separate mobile scale.
 
 ## Phase 5 — API (13 Nov 2026)
 
@@ -443,3 +459,37 @@ handler. No Fastify schema validation on bodies: malformed
 proposals must reach the service and be recorded. The built server
 was smoke-tested live (healthz 200, state 401, sandbox 201).
 213 tests green (178 before).
+
+## Phase 6 — Frontend foundation (13 Nov 2026)
+
+Theme tokens exactly as specified (design §8.4.1), with --stitch
+decided D25 and the type scale decided D44. Contrast verified by
+computation before any component shipped: all 8 text tokens pass
+4.5:1 on all 3 bases, text-on-fill passes on every fill, white
+passes on purple/amethyst/hero ends and FAILS on blue (3.15:1),
+so white never sits on blue. Font metrics were measured from the
+installed WOFF2 files with fontTools and the fallback faces carry
+x-height-matched size-adjust values (Inter 103.33%, Space Grotesk
+91.99%, Geist Mono 100.32%); no preload, per D26.
+
+Art kit is hand-drawn SVG (ghost in 5 states, monster head, bolt,
+suture divider, jack-o'-lantern, snowflake), all decorative and
+aria-hidden, total weight under 60 KB, no raw hex in TSX sources.
+Primitives: button, badge, inline message, link, status pill,
+panel, chip, meter, toggle, banner — every status indicator pairs
+an icon with a text label, nothing is color-only. Header band is
+the hero gradient with the wordmark, tagline, frozen-aware ghost,
+agent badge, and reset. App shell wires the store (first visit
+creates a sandbox on 401, expired offers a fresh one) and always
+renders the SIMULATED MONEY ONLY banner; the panels grid is empty
+until Phase 7. Favicon is a simplified ghost SVG with raw hex,
+because an external SVG cannot see CSS custom properties — the
+no-hex lint rule is scoped to TSX and CSS, not the favicon.
+
+Two test-harness facts worth recording: Vitest runs with globals
+off, so Testing Library cleanup must be registered explicitly in
+the setup file; and import.meta.url is unreliable under the Vite
+transform (it also rewrites `new URL` asset patterns), so the
+theme/art tests resolve fixture paths from process.cwd().
+270 tests green (213 before).
+
