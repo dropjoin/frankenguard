@@ -224,3 +224,146 @@ is filled from requirements.md (complete) plus the design prose, and
 logged here as a derivation, never as Kiro-verbatim. The running list
 lives in the "Derivations" section at the end of this journal; every
 entry names the gap, the sources used, and the choice made.
+
+## Derivations
+
+Numbered, in the order the gaps were hit. "Gap" names the truncated
+passage; "choice" is what the code does; nothing here is Kiro-verbatim.
+
+- **D1 — per-tx pass code.** Gap: design §3.2 reason-code table rows
+  truncated; only WITHIN_DAILY_CAP was captured for the daily pass.
+  Choice: `WITHIN_PER_TX_CAP`, by symmetry with `WITHIN_DAILY_CAP`.
+- **D2 — decision-level reasons.** Gap: how INVALID_PROPOSAL and
+  ENGINE_ERROR fit a Decision whose reasons are one-per-rule. Choice:
+  those two paths return zero reasons (no rule ran, R1.3/R2.8) and the
+  code travels in the top-level `reason` field, which otherwise holds
+  the first failing rule's code, or `"APPROVED"` when all pass.
+- **D3 — unreadable config.** Conflict, not a gap: R2.8 says
+  ENGINE_ERROR for unreadable configuration, R5.8 says SYSTEM_FROZEN
+  when the frozen state cannot be determined, design §4.6 and task 3.3
+  say ENGINE_ERROR. Choice: ENGINE_ERROR with frozen behavior (outcome
+  REJECTED, nothing executes). The behavior honors R5.8; the code
+  honors R2.8 and the design/task text.
+- **D4 — ENGINE_ERROR snapshot.** Gap: what `snapshot_json` holds when
+  no snapshot could be read. Choice: JSON null, and the API returns
+  `snapshot: null` for those decisions.
+- **D5 — invalid proposal persistence.** Gap: design §4.7 persists the
+  proposal before validation, but task 3.1 allows exactly one audit row
+  and no decision/payment for invalid proposals, while R1.3 requires
+  the rejection in the audit trail. Choice: persist the proposal row
+  with best-effort coerced fields (status BLOCKED), write exactly one
+  PROPOSAL_RECEIVED row whose payload carries the full raw payload plus
+  the validation outcome, and write no decision or payment row.
+- **D6 — request_hash input.** Gap: "canonical proposal JSON" is not
+  spelled out. Choice: SHA-256 of canonical JSON of the raw input
+  fields `{recipient, amountCents, currency, memo}` as received, so
+  "same body" means byte-equal input.
+- **D7 — 422 vs INVALID_PROPOSAL.** Gap: design §6.4 maps validation
+  failure to 422 while R1.3 records shape-invalid proposals with 200.
+  Choice: a body that is not a JSON object at all gets 422
+  INVALID_INPUT (nothing can be recorded); anything object-shaped goes
+  to the engine, which classifies it, and failures are recorded as
+  INVALID_PROPOSAL with 200. Task 1.1's test list puts type errors in
+  the engine, which settles the split.
+- **D8 — seq contiguity.** Gap: design §3.3 says seq has no gaps
+  "within a sandbox" while §3.1 defines a global AUTOINCREMENT. Choice:
+  global seq as defined; no seq-contiguity trigger, because
+  AUTOINCREMENT's high-water mark plus purging makes strict global
+  contiguity unenforceable. The chain-link trigger (prev_hash must
+  equal the sandbox tail) is the real guarantee, and verifyChain checks
+  strictly increasing seqs plus hash links.
+- **D9 — config-change audit types.** Gap: design §3.1 lists
+  CONFIG_CHANGED while §3.4 calls CAPS_CHANGED / ALLOWLIST_CHANGED /
+  FREEZE_CHANGED "kinds of CONFIG_CHANGED", and R3.9/R4.6/R5.5 name
+  them as entry types. Choice: store the specific name as the audit
+  `type` (requirements language wins; the column has no CHECK).
+- **D10 — AUDIT_VERIFIED.** Gap: the type exists in §3.1 but no flow
+  writes it, and task 5.6 makes the audit routes read-only. Choice:
+  the verify endpoint never writes; the type stays in the vocabulary
+  unused.
+- **D11 — seed labels.** Gap: design §7 allowlist labels truncated.
+  Choice: "Acme Corp" (the name §5.2's scenarios use for acme-corp),
+  "Globex Corp", "Initech" (same key-to-label pattern).
+- **D12 — purge flag storage.** Finding, not a gap: SQLite forbids
+  triggers in the main database from referencing temp tables, so the
+  planned temp-table flag failed at migration time with a hard error.
+  Choice: a one-row `purge_mode` table in the main schema, reset to 0
+  by openDb on every open, written only by the purge path inside a
+  finally-guarded helper.
+- **D13 — EXPIRING state.** Gap: the state CHECK lists EXPIRING but no
+  passage defines when a sandbox is EXPIRING. Choice: never written;
+  sandboxes are ACTIVE until purged.
+- **D14 — snapshot identity.** Gap: `snapshotKey` and `payloadVersion`
+  are named but never defined. Choice: payloadVersion `"1"`;
+  snapshotKey is the SHA-256 of the canonical JSON of the snapshot's
+  other fields; the allowlist is stored sorted so equal policies hash
+  equal.
+- **D15 — proposal label.** Gap: ValidProposal carries an optional
+  label but no input field supplies it. Choice: the service resolves
+  it from the allowlist entry at submit time; a caller-supplied label
+  is never trusted (R4.3).
+- **D16 — remainingCents.** Gap: design §4.3 requires remainingCents
+  in the daily-cap detail without saying before or after. Choice:
+  headroom BEFORE the proposal, the same number the spend meter shows.
+- **D17 — clientOnly.ts.** Gap: design §2.4 lists the file; no passage
+  defines it. Choice: the browser-safe display-metadata surface (rule
+  labels, descriptions, reason-code labels). Decision logic is never
+  re-exported to the client.
+- **D18 — repositories and transaction helper.** Gap: design §2.4
+  names only schema.sql and migrate.ts under db/, while task 2.4
+  requires typed repos and §4.7 requires BEGIN IMMEDIATE. Choice:
+  `db/repositories.ts` and the `withImmediateTransaction` helper in
+  `db/migrate.ts`.
+- **D19 — clock clamping.** Gap: design §12 says the clock is "clamped
+  to be non-decreasing within a sandbox" without a mechanism. Choice:
+  effective now is max(server clock, sandbox last_seen_at), applied in
+  touchSandbox.
+- **D20 — amount zero.** Conflict: design §4.3 writes "integer
+  0–1,000,000,000, inclusive" while R1.2 requires a positive integer
+  and task 1.1 lists amount 0 as an invalid case. Choice: 0 is
+  rejected (requirements + task list win).
+- **D21 — memo length.** Gap: "≤ 280 chars" without a counting rule.
+  Choice: Unicode code points, after trimming.
+- **D22 — empty idempotency key.** Gap: no passage covers a present
+  but empty key. Choice: field error; omit the field to skip
+  idempotency.
+- **D32 — audit-limit enforcement.** Gap: the 2,000-entry limit without
+  an enforcement point. Choice: refuse a submit when
+  auditCount + 3 > 2000 (a submit writes up to 3 entries), so the log
+  can never cross the limit; a submit starting at 1,997 lands exactly
+  at 2,000.
+- **D33 — removing an unlisted recipient.** Gap: no passage defines
+  the outcome. Choice: 404 NotFoundError, explicit feedback over
+  silent idempotent success; the UI always shows the current list.
+- **D34 — audit payload shapes.** Gap: design §6.1 names the fields
+  each audit type must carry but not the exact JSON. Choice:
+  PROPOSAL_RECEIVED carries recipientKey/amountCents/currency/memo/
+  idempotencyKey, plus invalid/fields/outcome/reason on the invalid
+  path; DECISION_MADE carries outcome/reason/reasons/snapshot/
+  dailySpentCents/windowStart (snapshot null + errorKind on
+  ENGINE_ERROR); PAYMENT_EXECUTED carries paymentId/amountCents/
+  recipientKey; config changes carry previous/new (and change for
+  allowlist). The query filters in queries.ts are the contract.
+- **D35 — replay before limits.** Gap: no ordering given. Choice: the
+  idempotency lookup runs before the limit checks, so a replay at the
+  limit still returns the original decision without writing anything.
+- **D36 — request-hash stringify.** Refinement of D6: the hash uses a
+  lenient sorted-key stringify (floats and odd values stringify
+  deterministically) rather than canonicalJson, so a malformed body
+  still hashes deterministically and replays compare correctly.
+
+## Phase 3 — services (13 Nov 2026)
+
+ProposalService.submit in one BEGIN IMMEDIATE transaction, in the
+design 4.7 order, with one deliberate swap: validation runs before
+the persist, because an invalid proposal's single audit row must
+carry the validation outcome. The persisted state is identical
+either way (all-or-nothing transaction). Fail-closed via a
+test-only fault seam: config/allowlist/ledger failures record
+ENGINE_ERROR; a failing DECISION_MADE write rolls everything back
+and surfaces 503. ConfigService validates with Zod outside the
+transaction, bumps config_version, audits every change. Audit
+queries are plain SQL over the JSON payloads with cursor
+pagination. 200 randomized submits across 4 connections never push
+executed spend past the daily cap and leave the chain valid.
+150 tests green (110 before).
