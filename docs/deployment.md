@@ -7,8 +7,12 @@ separate frontend deployment to keep in sync.
 ## Render (the public demo)
 
 `render.yaml` at the repo root is a Render Blueprint for a free web
-service: `npm ci && npm run build`, then `node
-dist/server/api/main.js`, health check on `/healthz`. Create it from
+service: `npm ci --include=dev && npm run build`, then `node
+dist/server/api/main.js`, health check on `/healthz`. The
+`--include=dev` matters: `NODE_ENV=production` makes plain `npm ci`
+skip devDependencies, but the build itself needs them (TypeScript,
+Vite, React, `@types/node`), so without it the Render build fails
+with `TS2688: Cannot find type definition file for 'node'`. Create it from
 the Render dashboard with New > Blueprint pointed at this repo. The
 blueprint sets `NODE_ENV=production` (Secure cookie flag) and
 `TRUST_PROXY=1` (Render terminates TLS and forwards plain HTTP, so

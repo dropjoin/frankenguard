@@ -17,7 +17,7 @@ services:
     name: frankenguard
     env: node
     plan: free
-    buildCommand: "npm ci && npm run build"
+    buildCommand: "npm ci --include=dev && npm run build"
     startCommand: "node dist/server/api/main.js"
     healthCheckPath: /healthz
     envVars:
