@@ -1,8 +1,7 @@
 # Devpost submission draft: FrankenGuard (DO NOT SUBMIT FROM THIS FILE)
 
 Category: Frankenstein. Solo entry. All fields in English.
-Demo video link to be filled in at submit time; everything else
-below is final copy.
+All fields below are final copy; video link filled in 13 Nov 2026.
 
 ---
 
@@ -20,7 +19,7 @@ daily cap. Every verdict lands in a hash-chained audit log.
 
 - Live demo: https://frankenguard.onrender.com
 - GitHub repo: https://github.com/dropjoin/frankenguard
-- Demo video: [ADD PUBLIC YOUTUBE LINK, UNDER 3 MINUTES]
+- Demo video: https://youtu.be/LLNOAb-xXno
 
 ## Description
 
@@ -128,7 +127,7 @@ repo's build journal.
 
 - A decision loop a judge can attack in under a minute, with a verdict
   trace that shows every rule, including the ones that passed.
-- 349 unit and component tests plus 20 end-to-end tests across two
+- 372 unit, component, and service tests plus 20 end-to-end tests across two
   viewports, including an axe accessibility pass and a concurrency
   test that fires 200 proposals at the ledger and verifies the chain.
 - A hash-chained audit log with append-only enforcement in the
