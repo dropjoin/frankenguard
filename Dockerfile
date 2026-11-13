@@ -19,7 +19,11 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DB_PATH=/app/data/frankenguard.db
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+# Native deps (better-sqlite3) are built once in the builder stage, which has the
+# toolchain. Reinstalling here would depend on prebuild downloads succeeding and
+# leave no fallback when they do not (slim has no Python/compiler for node-gyp).
+COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --omit=dev
 COPY --from=builder /app/dist ./dist
 RUN mkdir -p /app/data && chown -R node:node /app
 VOLUME /app/data
